@@ -44,10 +44,12 @@ function parseCSV(str) {
     return rows;
 }
 
-/* ======================= RENDER GROUP TABLE ======================= */
+
+/* ======================= MAIN TABLE (GROUP + COLLAPSE) ======================= */
 function renderGroupedTable(data) {
     let grouped = {};
 
+    // Nhóm theo LoaiTu
     data.forEach(item => {
         let loai = item.LoaiTu || "Không phân loại";
         if (!grouped[loai]) grouped[loai] = [];
@@ -55,7 +57,7 @@ function renderGroupedTable(data) {
     });
 
     let html = `
-        <input class="search-box" type="text" placeholder="🔎 Tìm mẫu hoặc barcode..." oninput="search(this.value)">
+        <input class="search-box" type="text" placeholder="🔎 Tìm mẫu hoặc barcode…" oninput="search(this.value)">
         <div class="table-container">
         <table>
             <tr>
@@ -66,24 +68,32 @@ function renderGroupedTable(data) {
             </tr>
     `;
 
-    Object.keys(grouped).forEach(loai => {
+    Object.keys(grouped).forEach((loai, index) => {
         let list = grouped[loai];
+
         let tong = list.reduce((sum, x) => sum + parseInt(x.TonKho || 0), 0);
 
+        // Lấy hình mẫu đầu tiên
+        let anhDaiDien = list[0].Hinh ? `<img src="images/${list[0].Hinh}" class="thumbnail">` : "—";
+
+        // Tạo ID cho collapse
+        let id = "group_" + index;
+
         html += `
-            <tr class="group-row">
+            <tr class="group-row" onclick="toggleGroup('${id}')">
                 <td><b>${loai}</b></td>
                 <td>—</td>
                 <td><b>${tong}</b></td>
-                <td>—</td>
+                <td>${anhDaiDien}</td>
             </tr>
         `;
 
+        // Các mẫu con (ẩn ban đầu)
         list.forEach(item => {
             let rowClass = getStockClass(item.TonKho);
 
             html += `
-                <tr class="${rowClass}">
+                <tr class="child-row ${rowClass}" data-group="${id}" style="display:none;">
                     <td style="padding-left:30px">${item.TenMau}</td>
                     <td>${item.Barcode || ""}</td>
                     <td>${item.TonKho}</td>
@@ -95,6 +105,15 @@ function renderGroupedTable(data) {
 
     html += "</table></div>";
     document.getElementById("table").innerHTML = html;
+}
+
+/* ======================= COLLAPSE / EXPAND ======================= */
+function toggleGroup(id) {
+    const rows = document.querySelectorAll(`tr[data-group="${id}"]`);
+
+    rows.forEach(r => {
+        r.style.display = r.style.display === "none" ? "table-row" : "none";
+    });
 }
 
 /* ======================= TỒN KHO COLOR ======================= */
