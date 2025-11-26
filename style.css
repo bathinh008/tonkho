@@ -1,6 +1,4 @@
-/* --------------------------------------------------
-   RESET + BASE
---------------------------------------------------*/
+/* RESET */
 * {
     margin: 0;
     padding: 0;
@@ -22,9 +20,7 @@ h1 {
     font-weight: 700;
 }
 
-/* --------------------------------------------------
-   SEARCH BOX
---------------------------------------------------*/
+/* SEARCH BOX */
 .search-box {
     width: 100%;
     max-width: 400px;
@@ -34,7 +30,6 @@ h1 {
     border-radius: 10px;
     border: 1px solid #ccc;
     font-size: 16px;
-    transition: 0.25s;
 }
 
 .search-box:focus {
@@ -42,9 +37,7 @@ h1 {
     box-shadow: 0 0 8px rgba(52,152,219,0.3);
 }
 
-/* --------------------------------------------------
-   TABLE (PC)
---------------------------------------------------*/
+/* TABLE PC */
 .table-container {
     overflow-x: auto;
     border-radius: 12px;
@@ -56,14 +49,12 @@ h1 {
 table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 16px;
 }
 
 th {
     background: #3498db;
     color: white;
     padding: 12px;
-    text-align: left;
 }
 
 td {
@@ -71,26 +62,16 @@ td {
     border-bottom: 1px solid #eee;
 }
 
-/* --------------------------------------------------
-   IMAGES — VUÔNG CHUẨN CHO PC
---------------------------------------------------*/
+/* PC thumbnail 80×80 */
 .thumbnail {
     width: 80px;
     height: 80px;
     object-fit: cover;
-    border-radius: 10px;
+    border-radius: 8px;
     background: #f2f2f2;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-    transition: transform 0.25s ease;
 }
 
-.thumbnail:hover {
-    transform: scale(1.06);
-}
-
-/* --------------------------------------------------
-   GROUP ROWS (HEADER)
---------------------------------------------------*/
+/* Group */
 .group-row {
     background: #dff1ff !important;
     cursor: pointer;
@@ -100,24 +81,12 @@ td {
     background: #cbe7ff !important;
 }
 
-/* --------------------------------------------------
-   STOCK COLORING
---------------------------------------------------*/
-.row-low-stock {
-    background: #ffeded !important;
-}
+/* Stock colors */
+.row-low-stock { background: #ffeded !important; }
+.row-medium-stock { background: #fff3e0 !important; }
+.row-normal-stock { background: #eefaff !important; }
 
-.row-medium-stock {
-    background: #fff3e0 !important;
-}
-
-.row-normal-stock {
-    background: #eefaff !important;
-}
-
-/* --------------------------------------------------
-   BUY BUTTON + INPUT
---------------------------------------------------*/
+/* Buy buttons */
 .buy-btn {
     padding: 6px 12px;
     background: #27ae60;
@@ -126,97 +95,85 @@ td {
     border-radius: 6px;
     font-size: 14px;
     cursor: pointer;
-    transition: 0.2s;
 }
 
 .buy-btn:hover {
     background: #1e874b;
 }
 
-.buy-area {
-    margin-top: 6px;
-    display: flex;
-    gap: 5px;
-    align-items: center;
-}
-
 .qty-input {
     width: 55px;
     padding: 6px;
-    border-radius: 6px;
-    border: 1px solid #ccc;
+}
+
+/* -------------------- MOBILE CARD VIEW -------------------- */
+.mobile-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.card {
+    background: white;
+    border-radius: 16px;
+    padding: 15px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+/* Ảnh vuông chuẩn mobile 300×300 */
+.card-img {
+    width: 300px;
+    height: 300px;
+    object-fit: cover;
+    border-radius: 14px;
+    display: block;
+    margin: 0 auto 12px auto;
+    background: #f2f2f2;
+}
+
+/* Card text */
+.card-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+
+.card-barcode {
     font-size: 14px;
+    margin-bottom: 4px;
 }
 
-/* --------------------------------------------------
-   MOBILE RESPONSIVE
---------------------------------------------------*/
-@media (max-width: 768px) {
-
-    h1 {
-        font-size: 22px;
-        margin-bottom: 15px;
-    }
-
-    .search-box {
-        width: 95%;
-        padding: 10px 12px;
-        margin-bottom: 15px;
-        font-size: 16px;
-    }
-
-    table {
-        font-size: 14px;
-    }
-
-    th, td {
-        padding: 8px;
-    }
-
-    /* Ảnh vuông chuẩn cho mobile */
-    .thumbnail {
-        width: 300px !important;
-        height: 300px !important;
-        object-fit: cover !important;
-        border-radius: 16px;
-    }
-
-    .buy-area {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 6px;
-    }
-
-    .qty-input {
-        width: 70px;
-        font-size: 14px;
-    }
-
-    .buy-btn {
-        padding: 8px 14px;
-        font-size: 14px;
-    }
+.card-stock {
+    font-size: 16px;
+    margin-bottom: 8px;
 }
 
+/* Mua */
+.card-buy {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.qty-control {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.qty-control button {
+    width: 36px;
+    height: 36px;
+    font-size: 22px;
+    background: #eee;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+}
+
+/* Mobile nhỏ */
 @media (max-width: 480px) {
-
-    table {
-        font-size: 13px;
-    }
-
-    /* Mobile nhỏ — ảnh vẫn 300x300 nhưng thu gọn margin */
-    .thumbnail {
-        width: 260px !important;
-        height: 260px !important;
-    }
-
-    .qty-input {
-        width: 60px;
-        font-size: 13px;
-    }
-
-    .buy-btn {
-        padding: 7px 12px;
-        font-size: 13px;
+    .card-img {
+        width: 260px;
+        height: 260px;
     }
 }
