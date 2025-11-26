@@ -3,6 +3,10 @@ const sheetCSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQs5iOdYRcQ_ek
 // THAY URL NÀY NẾU CẬU VỪA DEPLOY LẠI APPS SCRIPT
 const API_URL = "https://script.google.com/macros/s/AKfycbzDkTWSouNZW14cAJLO30GH1ZRLHIrdVJzLApqrUzVyeZbVebim_fOF5Dqfc-JmQCCf/exec"; 
 
+function isMobile() {
+    return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
+        || window.innerWidth <= 768;
+}
 
 /* ======================= LOAD CSV ======================= */
 async function loadInventory() {
@@ -16,7 +20,11 @@ async function loadInventory() {
 
         window.inventoryData = data;
 
-        renderGroupedTable(data);
+        if (isMobile()) {
+            renderMobileView(data);
+        } else {
+            renderGroupedTable(data); // PC
+        }
     } catch (err) {
         tableDiv.innerHTML = "❌ Không tải được dữ liệu!";
         console.error(err);
@@ -116,6 +124,49 @@ function renderGroupedTable(data) {
 
     html += "</table></div>";
     document.getElementById("table").innerHTML = html;
+}
+
+/* ======================= MOBILE CARD VIEW ======================= */
+function renderMobileView(data) {
+    let html = `<div class="mobile-list">`;
+
+    data.forEach((item, index) => {
+        let rowKey = "m_" + index;
+
+        html += `
+        <div class="card">
+            <img src="images/${item.Hinh}" class="card-img">
+
+            <div class="card-info">
+                <div class="card-title">${item.TenMau}</div>
+                <div class="card-barcode">Barcode: ${item.Barcode}</div>
+                <div class="card-stock ${getStockClass(item.TonKho)}">Tồn: ${item.TonKho}</div>
+            </div>
+
+            <div class="card-buy">
+                <div class="qty-control">
+                    <button onclick="changeQty('${rowKey}', -1)">−</button>
+                    <input id="qty_${rowKey}" type="number" value="1" min="1">
+                    <button onclick="changeQty('${rowKey}', 1)">+</button>
+                </div>
+
+                <button class="buy-btn"
+                    onclick="buyItem('${item.Barcode}', '${item.Hinh}', '${rowKey}', '${item.LoaiTu}')">
+                    Mua
+                </button>
+            </div>
+        </div>`;
+    });
+
+    html += "</div>";
+    document.getElementById("table").innerHTML = html;
+}
+
+/* Nút + / - mobile */
+function changeQty(rowKey, delta) {
+    let input = document.getElementById(`qty_${rowKey}`);
+    let v = parseInt(input.value) + delta;
+    input.value = v > 0 ? v : 1;
 }
 
 
@@ -232,4 +283,5 @@ function search(keyword) {
 
 
 loadInventory();
+
 
