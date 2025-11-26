@@ -123,3 +123,18 @@ tr:hover {
     .thumbnail { width: 45px; height: 45px; }
     th, td { font-size: 14px; padding: 10px; }
 }
+
+/* ====== New ====== */
+
+.group-row {
+    background: #dff1ff !important;
+    cursor: pointer;
+}
+
+.group-row:hover {
+    background: #cde7ff !important;
+}
+
+.child-row td {
+    background: white;
+}
