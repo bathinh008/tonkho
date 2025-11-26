@@ -21,7 +21,6 @@ h1 {
     font-weight: 700;
 }
 
-
 /* ====== SEARCH BOX ====== */
 .search-box {
     width: 100%;
@@ -40,7 +39,6 @@ h1 {
     border-color: #3498db;
     box-shadow: 0 0 8px rgba(52,152,219,0.3);
 }
-
 
 /* ====== TABLE CONTAINER ====== */
 .table-container {
@@ -64,7 +62,6 @@ th {
     padding: 12px;
     text-align: left;
     font-weight: 600;
-    cursor: default;
 }
 
 td {
@@ -72,12 +69,12 @@ td {
     border-bottom: 1px solid #eee;
 }
 
-/* ====== ROW HOVER ====== */
+/* ====== HOVER ====== */
 tr:hover {
     background: #f1f9ff;
 }
 
-/* ====== IMAGE ====== */
+/* ====== ẢNH ====== */
 .thumbnail {
     width: 60px;
     height: 60px;
@@ -86,44 +83,43 @@ tr:hover {
     box-shadow: 0 2px 6px rgba(0,0,0,0.2);
 }
 
-
-/* ====== RESPONSIVE ====== */
-@media (max-width: 600px) {
-    h1 {
-        font-size: 24px;
-    }
-
-    .thumbnail {
-        width: 45px;
-        height: 45px;
-    }
-
-    th, td {
-        padding: 10px;
-        font-size: 14px;
-    }
-}
-
-
-/* ====== EXISTING STOCK COLORING ====== */
-.low-stock {
-    color: #e74c3c !important;
-    font-weight: 700;
-}
-
-.medium-stock {
-    color: #e67e22;
-    font-weight: 600;
-}
-
-.normal-stock {
-    color: #2c3e50;
-}
-
-/* ====== LOẠI ====== */
-
+/* ====== DÒNG LOẠI TỦ ====== */
 .group-row {
     background: #dff1ff !important;
     color: #2c3e50;
     font-weight: 700;
+    font-size: 17px;
+}
+
+/* ====== CẢNH BÁO TỒN KHO ====== */
+.row-low-stock {
+    background: #ffcccc !important;
+}
+
+.row-medium-stock {
+    background: #ffe6cc !important;
+}
+
+.row-normal-stock {
+    background: #e8f7ff !important;
+}
+
+/* Hover vẫn giữ màu */
+.row-low-stock:hover {
+    background: #ffb3b3 !important;
+}
+
+.row-medium-stock:hover {
+    background: #ffd699 !important;
+}
+
+.row-normal-stock:hover {
+    background: #d6f0ff !important;
+}
+
+/* ====== Responsive ====== */
+@media (max-width: 600px) {
+    h1 { font-size: 24px; }
+    .thumbnail { width: 45px; height: 45px; }
+    th, td { font-size: 14px; padding: 10px; }
 }
