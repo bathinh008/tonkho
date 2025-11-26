@@ -1,7 +1,7 @@
 const sheetCSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQs5iOdYRcQ_ekDgPPzIw7FRwN1tiF7hY3YWPAw3_6ga6xUMt-SgeiNzSMpVotjUypdAAZUAvRfReAu/pub?output=csv";
 
-// THAY URL NÀY NẾU CẬU VỪA DEPLOY LẠI APPS SCRIPT
-const API_URL = "https://script.google.com/macros/s/AKfycbzDkTWSouNZW14cAJLO30GH1ZRLHIrdVJzLApqrUzVyeZbVebim_fOF5Dqfc-JmQCCf/exec"; 
+// URL API Apps Script
+const API_URL = "https://script.google.com/macros/s/AKfycbzDkTWSouNZW14cAJLO30GH1ZRLHIrdVJzLApqrUzVyeZbVebim_fOF5Dqfc-JmQCCf/exec";
 
 function isMobile() {
     return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
@@ -12,7 +12,7 @@ function isMobile() {
 async function loadInventory() {
     const tableDiv = document.getElementById("table");
     tableDiv.innerHTML = "⏳ Đang tải dữ liệu...";
-    
+
     try {
         let res = await fetch(sheetCSV);
         let csvText = await res.text();
@@ -20,17 +20,14 @@ async function loadInventory() {
 
         window.inventoryData = data;
 
-        if (isMobile()) {
-            renderMobileView(data);
-        } else {
-            renderGroupedTable(data); // PC
-        }
+        if (isMobile()) renderMobileView(data);
+        else renderGroupedTable(data);
+
     } catch (err) {
         tableDiv.innerHTML = "❌ Không tải được dữ liệu!";
         console.error(err);
     }
 }
-
 
 /* ======================= PARSE CSV ======================= */
 function parseCSV(str) {
@@ -57,8 +54,7 @@ function parseCSV(str) {
     return rows;
 }
 
-
-/* ======================= RENDER GROUP TABLE ======================= */
+/* ======================= PC VIEW ======================= */
 function renderGroupedTable(data) {
     let grouped = {};
 
@@ -80,41 +76,35 @@ function renderGroupedTable(data) {
     `;
 
     Object.keys(grouped).forEach((loai, groupIndex) => {
+
         let list = grouped[loai];
-        let tong = list.reduce((sum, x) => sum + parseInt(x.TonKho || 0), 0);
+        let tong = list.reduce((s, x) => s + parseInt(x.TonKho || 0), 0);
         let groupId = "group_" + groupIndex;
 
         let anhDaiDien = list[0].Hinh ? `<img src="images/${list[0].Hinh}" class="thumbnail">` : "—";
-        let barcodeDaiDien = list[0].Barcode || "";
 
         html += `
             <tr class="group-row" onclick="toggleGroup('${groupId}', this)">
                 <td><span class="arrow">▸</span> <b>${loai}</b></td>
-                <td>${barcodeDaiDien}</td>
+                <td>${list[0].Barcode}</td>
                 <td><b id="group_total_${groupId}">${tong}</b></td>
                 <td>${anhDaiDien}</td>
             </tr>
         `;
 
         list.forEach((item, i) => {
-            let rowClass = getStockClass(item.TonKho);
-            // key DOM riêng cho dòng này
             let rowKey = `${groupIndex}_${i}`;
 
             html += `
-                <tr class="child-row ${rowClass}" data-group="${groupId}" style="display:none;">
+                <tr class="child-row ${getStockClass(item.TonKho)}" data-group="${groupId}" style="display:none;">
                     <td style="padding-left:40px">${item.TenMau}</td>
                     <td>${item.Barcode}</td>
                     <td id="stock_${rowKey}">${item.TonKho}</td>
                     <td>
-                        ${item.Hinh ? `<img src="images/${item.Hinh}" class="thumbnail">` : "—"}
-                        
+                        <img src="images/${item.Hinh}" class="thumbnail">
                         <div class="buy-area">
-                            <input type="number" id="qty_${rowKey}" class="qty-input" value="1" min="1">
-                            <button class="buy-btn"
-                                onclick="buyItem('${item.Barcode}', '${item.Hinh}', '${rowKey}', '${groupId}')">
-                                Mua
-                            </button>
+                            <input id="qty_${rowKey}" type="number" class="qty-input" value="1" min="1">
+                            <button class="buy-btn" onclick="buyItem('${item.Barcode}', '${item.Hinh}', '${rowKey}', '${groupId}')">Mua</button>
                         </div>
                     </td>
                 </tr>
@@ -126,7 +116,7 @@ function renderGroupedTable(data) {
     document.getElementById("table").innerHTML = html;
 }
 
-/* ======================= MOBILE CARD VIEW ======================= */
+/* ======================= MOBILE VIEW ======================= */
 function renderMobileView(data) {
     let html = `<div class="mobile-list">`;
 
@@ -134,7 +124,7 @@ function renderMobileView(data) {
         let rowKey = "m_" + index;
 
         html += `
-        <div class="card">
+        <div class="card" id="card_${rowKey}">
             <img src="images/${item.Hinh}" class="card-img">
 
             <div class="card-info">
@@ -162,20 +152,18 @@ function renderMobileView(data) {
     document.getElementById("table").innerHTML = html;
 }
 
-/* Nút + / - mobile */
-function changeQty(rowKey, delta) {
-    let input = document.getElementById(`qty_${rowKey}`);
-    let v = parseInt(input.value) + delta;
-    input.value = v > 0 ? v : 1;
+function changeQty(key, delta) {
+    let i = document.getElementById(`qty_${key}`);
+    let v = parseInt(i.value) + delta;
+    i.value = v > 0 ? v : 1;
 }
 
-
-/* ======================= COLLAPSE ======================= */
-function toggleGroup(id, headerRow) {
+/* ======================= COLLAPSE SECTION ======================= */
+function toggleGroup(id, header) {
     const rows = document.querySelectorAll(`tr[data-group="${id}"]`);
-    const arrow = headerRow.querySelector(".arrow");
+    const arrow = header.querySelector(".arrow");
 
-    const isClosed = rows[0].style.display === "none" || rows[0].style.display === "";
+    const isClosed = rows[0].style.display === "none";
 
     if (isClosed) {
         arrow.textContent = "▼";
@@ -186,8 +174,7 @@ function toggleGroup(id, headerRow) {
     }
 }
 
-
-/* ======================= STOCK COLOR ======================= */
+/* ======================= COLOR CLASS ======================= */
 function getStockClass(qty) {
     qty = parseInt(qty || 0);
     if (qty <= 3) return "row-low-stock";
@@ -195,93 +182,71 @@ function getStockClass(qty) {
     return "row-normal-stock";
 }
 
-
-/* ========= CẬP NHẬT TỔNG TỒN MỖI LOẠI SAU KHI MUA ========= */
+/* ======================= UPDATE TOTAL ======================= */
 function updateGroupTotal(groupId) {
     const rows = document.querySelectorAll(`tr[data-group="${groupId}"]`);
 
     let total = 0;
     rows.forEach(r => {
-        const stockCell = r.querySelector("td[id^='stock_']");
-        if (!stockCell) return;
-        const qty = parseInt(stockCell.textContent || "0");
-        total += qty;
+        let c = r.querySelector("td[id^='stock_']");
+        if (c) total += parseInt(c.textContent || 0);
     });
 
-    const totalCell = document.getElementById(`group_total_${groupId}`);
-    if (totalCell) totalCell.textContent = total;
+    let cell = document.getElementById(`group_total_${groupId}`);
+    if (cell) cell.textContent = total;
 }
 
-
-/* ===== BUY ITEM – GỬI BARCODE + HÌNH + HỎI XÁC NHẬN ===== */
+/* ======================= BUY ITEM ======================= */
 async function buyItem(barcode, hinh, rowKey, groupId) {
+
     let qtyField = document.getElementById(`qty_${rowKey}`);
     let qty = parseInt(qtyField.value) || 1;
-    if (qty <= 0) qty = 1;
 
-    const ok = confirm(
-        `Xác nhận mua ${qty} sản phẩm?\n` +
-        `Barcode: ${barcode}\n` +
-        `Hình: ${hinh}`
-    );
-    if (!ok) return;
+    if (!confirm(`Xác nhận mua ${qty} sản phẩm?\nBarcode: ${barcode}`)) return;
 
     const url = `${API_URL}?action=minus&barcode=${encodeURIComponent(barcode)}&hinh=${encodeURIComponent(hinh)}&qty=${qty}`;
 
     try {
         const res = await fetch(url);
         const text = await res.text();
-        console.log("API raw:", text);
-
-        let data;
-        try {
-            data = JSON.parse(text);
-        } catch (err) {
-            alert("❌ API trả về không phải JSON. Kiểm tra lại Apps Script.");
-            console.error("JSON parse error:", err);
-            return;
-        }
+        let data = JSON.parse(text);
 
         if (!data.success) {
-            alert("❌ Lỗi API: " + (data.message || "Unknown error"));
+            alert("❌ " + (data.message || "Không tìm thấy sản phẩm"));
             return;
         }
 
-        // Cập nhật tồn của mẫu
-        const stockCell = document.getElementById(`stock_${rowKey}`);
-        stockCell.textContent = data.newStock;
+        /* PC update cell */
+        let stockCell = document.getElementById(`stock_${rowKey}`);
+        if (stockCell) stockCell.textContent = data.newStock;
 
-        // Cập nhật tổng tồn của loại
+        /* MOBILE update card */
+        if (isMobile()) {
+            let div = document.querySelector(`#card_${rowKey} .card-stock`);
+            if (div) div.textContent = "Tồn: " + data.newStock;
+        }
+
         updateGroupTotal(groupId);
 
-        alert(
-            `✔ Đã trừ tồn kho!\n` +
-            `Barcode: ${barcode}\n` +
-            `Hình: ${hinh}\n` +
-            `Số lượng mua: ${qty}\n` +
-            `Tồn mới: ${data.newStock}`
-        );
+        alert(`✔ Đã trừ tồn!\nBarcode: ${barcode}\nTồn mới: ${data.newStock}`);
 
     } catch (err) {
-        alert("❌ Không thể kết nối API!");
+        alert("❌ Lỗi kết nối API");
         console.error(err);
     }
 }
-
 
 /* ======================= SEARCH ======================= */
 function search(keyword) {
     keyword = keyword.toLowerCase().trim();
 
     const filtered = window.inventoryData.filter(item =>
-        (item.TenMau || "").toLowerCase().includes(keyword) ||
-        (item.Barcode || "").toLowerCase().includes(keyword)
+        item.TenMau.toLowerCase().includes(keyword) ||
+        item.Barcode.toLowerCase().includes(keyword)
     );
 
-    renderGroupedTable(filtered);
+    if (isMobile()) renderMobileView(filtered);
+    else renderGroupedTable(filtered);
 }
 
-
 loadInventory();
-
-
