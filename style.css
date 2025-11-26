@@ -138,3 +138,23 @@ tr:hover {
 .child-row td {
     background: white;
 }
+
+
+/* ====== ARROW ROTATE ====== */
+.arrow {
+    display: inline-block;
+    transition: transform 0.25s ease;
+    margin-right: 5px;
+}
+
+.arrow-open {
+    transform: rotate(90deg);
+}
+
+/* ====== CHILD ROW SLIDE-DOWN ====== */
+.child-row {
+    transition: all 0.25s ease;
+    max-height: 0;
+    overflow: hidden;
+    display: none;
+}
