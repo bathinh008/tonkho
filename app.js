@@ -14,7 +14,13 @@ async function loadInventory() {
     tableDiv.innerHTML = "⏳ Đang tải dữ liệu...";
 
     try {
-        let res = await fetch(sheetCSV);
+        // Thêm tham số chống cache
+        const noCacheUrl = sheetCSV + "&_=" + Date.now();
+
+        let res = await fetch(noCacheUrl, {
+            cache: "no-store"
+        });
+
         let csvText = await res.text();
         const data = parseCSV(csvText);
 
@@ -270,3 +276,4 @@ function search(keyword) {
 }
 
 loadInventory();
+
