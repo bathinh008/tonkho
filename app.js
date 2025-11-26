@@ -76,13 +76,25 @@ function renderTable(data) {
                 <td>${row.Hinh ? `<img src="images/${row.Hinh}" class="thumbnail">` : "—"}</td>
                 <td>${row.Barcode || ""}</td>
                 <td>${row.Ten || ""}</td>
-                <td>${row.TonKho || 0}</td>
+                <td class="${getStockClass(row.TonKho)}">${row.TonKho || 0}</td>
             </tr>
         `;
     });
 
     html += "</table></div>";
     document.getElementById("table").innerHTML = html;
+}
+
+/* ---------------------------------------------------
+   BÁO TỒN KHO
+------------------------------------------------------ */
+
+function getStockClass(qty) {
+    qty = parseInt(qty || 0);
+
+    if (qty <= 3) return "low-stock";       // đỏ
+    if (qty <= 10) return "medium-stock";   // cam
+    return "normal-stock";                  // xanh / đen
 }
 
 /* ---------------------------------------------------
@@ -117,3 +129,4 @@ function sortTonKho() {
 
 // Start
 loadInventory();
+
