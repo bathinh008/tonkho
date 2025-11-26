@@ -78,7 +78,13 @@ function renderGroupedTable(data) {
     Object.keys(grouped).forEach((loai, groupIndex) => {
 
         let list = grouped[loai];
-        let tong = list.reduce((s, x) => s + parseInt(x.TonKho || 0), 0);
+
+        // 👉 Chỉ tính tổng hàng còn tồn
+        let tong = list.reduce((s, x) => {
+            let t = parseInt(x.TonKho || 0);
+            return t > 0 ? s + t : s;
+        }, 0);
+
         let groupId = "group_" + groupIndex;
 
         let anhDaiDien = list[0].Hinh ? `<img src="images/${list[0].Hinh}" class="thumbnail">` : "—";
@@ -93,6 +99,10 @@ function renderGroupedTable(data) {
         `;
 
         list.forEach((item, i) => {
+
+            // ⭐ ẨN SẢN PHẨM HẾT HÀNG
+            if (parseInt(item.TonKho) <= 0) return;
+
             let rowKey = `${groupIndex}_${i}`;
 
             html += `
@@ -121,6 +131,10 @@ function renderMobileView(data) {
     let html = `<div class="mobile-list">`;
 
     data.forEach((item, index) => {
+
+        // ⭐ ẨN SẢN PHẨM HẾT HÀNG
+        if (parseInt(item.TonKho) <= 0) return;
+
         let rowKey = "m_" + index;
 
         html += `
@@ -229,6 +243,12 @@ async function buyItem(barcode, hinh, rowKey, groupId) {
         updateGroupTotal(groupId);
 
         alert(`✔ Đã trừ tồn!\nBarcode: ${barcode}\nTồn mới: ${data.newStock}`);
+
+        // ⭐ Nếu hết hàng → load lại để ẩn sản phẩm
+        if (data.newStock <= 0) {
+            loadInventory();
+            return;
+        }
 
     } catch (err) {
         alert("❌ Lỗi kết nối API");
