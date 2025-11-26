@@ -1,9 +1,11 @@
 const sheetCSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQs5iOdYRcQ_ekDgPPzIw7FRwN1tiF7hY3YWPAw3_6ga6xUMt-SgeiNzSMpVotjUypdAAZUAvRfReAu/pub?output=csv";
 
+const API_URL = "https://script.google.com/macros/s/AKfycbwCNLVgLCjjAF0rXSKcmeldEbqdsRnbqiRhoFXwx23q6mUXfl1H1hkeB0AYM-HeQuX9/exec"; // <-- THAY VÀO
+
 async function loadInventory() {
     const tableDiv = document.getElementById("table");
     tableDiv.innerHTML = "⏳ Đang tải dữ liệu...";
-
+    
     try {
         let res = await fetch(sheetCSV);
         let csvText = await res.text();
@@ -12,7 +14,6 @@ async function loadInventory() {
         window.inventoryData = data;
 
         renderGroupedTable(data);
-
     } catch (err) {
         tableDiv.innerHTML = "❌ Không tải được dữ liệu!";
         console.error(err);
@@ -44,7 +45,7 @@ function parseCSV(str) {
     return rows;
 }
 
-/* ======================= MAIN TABLE (GROUP + COLLAPSE) ======================= */
+/* ======================= RENDER GROUP TABLE ======================= */
 function renderGroupedTable(data) {
     let grouped = {};
 
@@ -71,13 +72,13 @@ function renderGroupedTable(data) {
         let tong = list.reduce((sum, x) => sum + parseInt(x.TonKho || 0), 0);
         let id = "group_" + index;
 
-        // Ảnh đại diện = mẫu đầu tiên
         let anhDaiDien = list[0].Hinh ? `<img src="images/${list[0].Hinh}" class="thumbnail">` : "—";
+        let barcodeDaiDien = list[0].Barcode || "";
 
         html += `
             <tr class="group-row" onclick="toggleGroup('${id}', this)">
                 <td><span class="arrow">▸</span> <b>${loai}</b></td>
-                <td>${list[0].Barcode || ""}</td>
+                <td>${barcodeDaiDien}</td>
                 <td><b>${tong}</b></td>
                 <td>${anhDaiDien}</td>
             </tr>
@@ -89,9 +90,12 @@ function renderGroupedTable(data) {
             html += `
                 <tr class="child-row ${rowClass}" data-group="${id}">
                     <td style="padding-left:40px">${item.TenMau}</td>
-                    <td>${item.Barcode || ""}</td>
+                    <td>${item.Barcode}</td>
                     <td>${item.TonKho}</td>
-                    <td>${item.Hinh ? `<img src="images/${item.Hinh}" class="thumbnail">` : "—"}</td>
+                    <td>
+                        ${item.Hinh ? `<img src="images/${item.Hinh}" class="thumbnail">` : "—"}
+                        <button class="buy-btn" onclick="buyItem('${item.TenMau}', '${item.Barcode}')">Mua</button>
+                    </td>
                 </tr>
             `;
         });
@@ -101,12 +105,12 @@ function renderGroupedTable(data) {
     document.getElementById("table").innerHTML = html;
 }
 
-/* ======================= COLLAPSE + ARROW ROTATE + ANIMATION ======================= */
+/* ======================= COLLAPSE + ARROW ======================= */
 function toggleGroup(id, headerRow) {
     const rows = document.querySelectorAll(`tr[data-group="${id}"]`);
     const arrow = headerRow.querySelector(".arrow");
 
-    let isHidden = rows[0].style.maxHeight === "" || rows[0].style.maxHeight === "0px";
+    let isHidden = rows[0].style.display === "none" || rows[0].style.display === "";
 
     if (isHidden) {
         arrow.classList.add("arrow-open");
@@ -127,9 +131,28 @@ function toggleGroup(id, headerRow) {
 function getStockClass(qty) {
     qty = parseInt(qty || 0);
 
-    if (qty <= 3) return "row-low-stock"; 
+    if (qty <= 3) return "row-low-stock";
     if (qty <= 10) return "row-medium-stock";
     return "row-normal-stock";
+}
+
+/* ======================= BUY ITEM (TRỪ TỒN KHO) ======================= */
+function buyItem(ten, barcode) {
+    fetch(API_URL, {
+        method: "POST",
+        body: JSON.stringify({ barcode }),
+        headers: { "Content-Type": "application/json" }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            alert(`Đã trừ tồn kho!\nMẫu: ${ten}\nBarcode: ${barcode}\nTồn mới: ${data.newStock}`);
+            loadInventory();
+        } else {
+            alert("Không tìm thấy barcode trong Google Sheet.");
+        }
+    })
+    .catch(() => alert("Lỗi kết nối API!"));
 }
 
 /* ======================= SEARCH ======================= */
@@ -145,4 +168,3 @@ function search(keyword) {
 }
 
 loadInventory();
-
