@@ -1,30 +1,35 @@
+const sheetCSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vXXXXXXX/pub?output=csv";
+
 async function loadInventory() {
     const tableDiv = document.getElementById("table");
-    tableDiv.innerHTML = "⏳ Đang tải dữ liệu từ server...";
+    tableDiv.innerHTML = "⏳ Đang tải dữ liệu...";
 
     try {
-        let response = await fetch("get_inventory.php");
-        let json = await response.json();
+        let res = await fetch(sheetCSV);
+        let csvText = await res.text();
+        const data = parseCSV(csvText);
 
-        if (json.status !== "success") {
-            tableDiv.innerHTML = "❌ Lỗi dữ liệu: " + json.message;
-            return;
-        }
+        window.inventoryData = data;
+        renderTable(data);
 
-        // Lưu dữ liệu để filter
-        window.inventoryData = json.data;
-
-        // Render bảng
-        renderTable(json.data);
-
-    } catch (e) {
-        tableDiv.innerHTML = "❌ Không kết nối được PHP backend!";
-        console.error(e);
+    } catch (err) {
+        tableDiv.innerHTML = "❌ Không tải được dữ liệu!";
+        console.error(err);
     }
 }
 
+// Parse CSV thành array of objects
+function parseCSV(str) {
+    const lines = str.trim().split("\n");
+    const headers = lines.shift().split(",");
+    return lines.map(line => {
+        const values = line.split(",");
+        let obj = {};
+        headers.forEach((h, i) => obj[h] = values[i]);
+        return obj;
+    });
+}
 
-// Render bảng HTML
 function renderTable(data) {
     if (!data || data.length === 0) {
         document.getElementById("table").innerHTML = "Không có dữ liệu";
@@ -47,29 +52,25 @@ function renderTable(data) {
         html += `
             <tr>
                 <td>${row.Hinh ? `<img src="images/${row.Hinh}" class="thumbnail">` : "—"}</td>
-                <td>${row.Barcode || ""}</td>
-                <td>${row.Ten || ""}</td>
-                <td>${row.TonKho || 0}</td>
+                <td>${row.Barcode}</td>
+                <td>${row.Ten}</td>
+                <td>${row.TonKho}</td>
             </tr>
         `;
     });
 
     html += "</table></div>";
-
     document.getElementById("table").innerHTML = html;
 }
 
 // Tìm kiếm
 function search(keyword) {
     keyword = keyword.toLowerCase();
-
     const filtered = window.inventoryData.filter(item =>
         (item.Barcode || "").toLowerCase().includes(keyword) ||
         (item.Ten || "").toLowerCase().includes(keyword)
     );
-
     renderTable(filtered);
 }
 
-// Auto load
 loadInventory();
