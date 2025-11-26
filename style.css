@@ -134,14 +134,14 @@ td {
 
 /* ----- TEXT LỚN HƠN ----- */
 .card-title {
-    font-size: 20px;
+    font-size: 48px;
     font-weight: 700;
     margin-bottom: 8px;
     color: #2c3e50;
 }
 
 .card-barcode {
-    font-size: 15px;
+    font-size: 48px;
     margin-bottom: 6px;
     color: #444;
 }
@@ -235,5 +235,6 @@ td {
         font-size: 18px;
     }
 }
+
 
 
