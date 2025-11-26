@@ -75,3 +75,4 @@ function search(keyword) {
 
 loadInventory();
 
+
