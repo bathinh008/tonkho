@@ -1,7 +1,10 @@
 const sheetCSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQs5iOdYRcQ_ekDgPPzIw7FRwN1tiF7hY3YWPAw3_6ga6xUMt-SgeiNzSMpVotjUypdAAZUAvRfReAu/pub?output=csv";
 
-const API_URL = "https://script.google.com/macros/s/AKfycbwMS8V-bf8PUAiBb2JIxEHBPo42qPkQlUQYC-lDzXwUmE-a_WCFLWIlUw1LSrX0XCac/exec"; // <-- THAY VÀO
+const API_URL = "https://script.google.com/macros/s/AKfycbwgVsAYrrtqbdYJyMjrr69FfPwhJN4R4z8Bwmk4IkUhN0P5NU0Eevto5zp1IiQg30f-/exec"; 
 
+
+
+/* ======================= LOAD CSV ======================= */
 async function loadInventory() {
     const tableDiv = document.getElementById("table");
     tableDiv.innerHTML = "⏳ Đang tải dữ liệu...";
@@ -19,6 +22,8 @@ async function loadInventory() {
         console.error(err);
     }
 }
+
+
 
 /* ======================= PARSE CSV ======================= */
 function parseCSV(str) {
@@ -44,6 +49,8 @@ function parseCSV(str) {
 
     return rows;
 }
+
+
 
 /* ======================= RENDER GROUP TABLE ======================= */
 function renderGroupedTable(data) {
@@ -84,20 +91,21 @@ function renderGroupedTable(data) {
             </tr>
         `;
 
-        list.forEach(item => {
+        list.forEach((item, i) => {
             let rowClass = getStockClass(item.TonKho);
-        
+
             html += `
-                <tr class="child-row ${rowClass}" data-group="${id}">
+                <tr class="child-row ${rowClass}" data-group="${id}" style="display:none;">
                     <td style="padding-left:40px">${item.TenMau}</td>
                     <td>${item.Barcode}</td>
-                    <td>${item.TonKho}</td>
+                    <td id="stock_${item.Barcode}_${i}">${item.TonKho}</td>
                     <td>
                         ${item.Hinh ? `<img src="images/${item.Hinh}" class="thumbnail">` : "—"}
                         
                         <div class="buy-area">
-                            <input type="number" id="qty_${item.Barcode}" class="qty-input" value="1" min="1">
-                            <button class="buy-btn" onclick="buyItem('${item.TenMau}', '${item.Barcode}')">Mua</button>
+                            <input type="number" id="qty_${item.Barcode}_${i}" class="qty-input" value="1" min="1">
+                            <button class="buy-btn"
+                                onclick="buyItem('${item.Barcode}', '${i}', '${id}')">Mua</button>
                         </div>
                     </td>
                 </tr>
@@ -109,66 +117,64 @@ function renderGroupedTable(data) {
     document.getElementById("table").innerHTML = html;
 }
 
-/* ======================= COLLAPSE + ARROW ======================= */
+
+
+/* ======================= COLLAPSE ======================= */
 function toggleGroup(id, headerRow) {
     const rows = document.querySelectorAll(`tr[data-group="${id}"]`);
     const arrow = headerRow.querySelector(".arrow");
 
-    let isHidden = rows[0].style.display === "none" || rows[0].style.display === "";
+    const isClosed = rows[0].style.display === "none";
 
-    if (isHidden) {
-        arrow.classList.add("arrow-open");
-        rows.forEach(r => {
-            r.style.display = "table-row";
-            r.style.maxHeight = "100px";
-        });
+    if (isClosed) {
+        arrow.textContent = "▼";
+        rows.forEach(r => r.style.display = "table-row");
     } else {
-        arrow.classList.remove("arrow-open");
-        rows.forEach(r => {
-            r.style.maxHeight = "0px";
-            setTimeout(() => r.style.display = "none", 200);
-        });
+        arrow.textContent = "▸";
+        rows.forEach(r => r.style.display = "none");
     }
 }
+
+
 
 /* ======================= STOCK COLOR ======================= */
 function getStockClass(qty) {
     qty = parseInt(qty || 0);
-
     if (qty <= 3) return "row-low-stock";
     if (qty <= 10) return "row-medium-stock";
     return "row-normal-stock";
 }
 
-/* ======================= BUY ITEM (TRỪ TỒN KHO) ======================= */
-function buyItem(ten, barcode) {
-    let qtyField = document.getElementById("qty_" + barcode);
+
+
+/* ======================= BUY ITEM VIA GET API ======================= */
+async function buyItem(barcode, index) {
+
+    let qtyField = document.getElementById(`qty_${barcode}_${index}`);
     let qty = parseInt(qtyField.value) || 1;
 
-    if (qty <= 0) qty = 1;
+    const url = `${API_URL}?action=minus&barcode=${barcode}&qty=${qty}`;
 
-    fetch(API_URL, {
-        method: "POST",
-        body: JSON.stringify({ barcode, qty }),
-        headers: { "Content-Type": "application/json" }
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            alert(
-                `Đã trừ tồn kho!\n` +
-                `Mẫu: ${ten}\n` +
-                `Barcode: ${barcode}\n` +
-                `Số lượng mua: ${qty}\n` +
-                `Tồn mới: ${data.newStock}`
-            );
-            loadInventory();
-        } else {
-            alert("Không tìm thấy barcode trong Google Sheet.");
+    try {
+        const res = await fetch(url);    // <-- GET request, KHÔNG CORS
+        const data = await res.json();
+
+        if (!data.success) {
+            alert("❌ Barcode không tồn tại trong Google Sheet!");
+            return;
         }
-    })
-    .catch(() => alert("Lỗi kết nối API!"));
+
+        document.getElementById(`stock_${barcode}_${index}`).textContent = data.newStock;
+
+        alert(`✔ Đã trừ tồn:\nBarcode: ${barcode}\nSố lượng: ${qty}\nTồn mới: ${data.newStock}`);
+
+    } catch (err) {
+        alert("❌ Không thể kết nối API!");
+        console.error(err);
+    }
 }
+
+
 
 /* ======================= SEARCH ======================= */
 function search(keyword) {
@@ -182,12 +188,6 @@ function search(keyword) {
     renderGroupedTable(filtered);
 }
 
+
+
 loadInventory();
-
-
-
-
-
-
-
-
