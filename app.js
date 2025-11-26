@@ -1,6 +1,6 @@
 const sheetCSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQs5iOdYRcQ_ekDgPPzIw7FRwN1tiF7hY3YWPAw3_6ga6xUMt-SgeiNzSMpVotjUypdAAZUAvRfReAu/pub?output=csv";
 
-const API_URL = "https://script.google.com/macros/s/AKfycbz8YtkhkNx6XaaoJOehFCVn0AlkwrU7bt7f-R3vVEdta6MNlu2GWHFZadVNn3AIEi9x/exec"; // <-- THAY VÀO
+const API_URL = "https://script.google.com/macros/s/AKfycbzSs0hL56GsB6ys1rUcftNQPFQtn7rcpH8VoxIeXpgnzmSD09hDnuI-JwnXnmq3ALdk/exec"; // <-- THAY VÀO
 
 async function loadInventory() {
     const tableDiv = document.getElementById("table");
@@ -183,6 +183,7 @@ function search(keyword) {
 }
 
 loadInventory();
+
 
 
 
