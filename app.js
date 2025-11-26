@@ -9,7 +9,7 @@ async function loadInventory() {
         let csvText = await res.text();
         const data = parseCSV(csvText);
 
-        // Lưu data toàn cục
+        // Lưu toàn cục để tìm kiếm / sort
         window.inventoryData = data;
 
         renderTable(data);
@@ -20,15 +20,18 @@ async function loadInventory() {
     }
 }
 
-/* -------------------------
-   CSV PARSER CHUẨN
---------------------------*/
+/* ---------------------------------------------------
+   PARSE CSV CHUẨN (xử lý dấu phẩy, dấu ngoặc, BOM)
+------------------------------------------------------ */
 function parseCSV(str) {
     const rows = [];
     const lines = str.trim().split("\n");
 
-    // Tách header theo CSV chuẩn (xử lý trường có dấu phẩy bằng "")
-    const headers = lines.shift().match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
+    // Lấy header chính xác
+    const rawHeaders = lines.shift();
+    const headers = rawHeaders
+        .match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g)
+        .map(h => h.replace(/"/g, "").trim());
 
     lines.forEach(line => {
         const values = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
@@ -36,7 +39,8 @@ function parseCSV(str) {
 
         let obj = {};
         headers.forEach((h, i) => {
-            obj[h.replace(/"/g, "")] = (values[i] || "").replace(/"/g, "");
+            const val = (values[i] || "").replace(/"/g, "").trim();
+            obj[h] = val;
         });
         rows.push(obj);
     });
@@ -44,9 +48,9 @@ function parseCSV(str) {
     return rows;
 }
 
-/* -------------------------
+/* ---------------------------------------------------
    RENDER TABLE
---------------------------*/
+------------------------------------------------------ */
 function renderTable(data) {
     if (!data || data.length === 0) {
         document.getElementById("table").innerHTML = "Không có dữ liệu";
@@ -66,11 +70,10 @@ function renderTable(data) {
     `;
 
     data.forEach(row => {
-        const imgFile = row.Hinh ? row.Hinh.trim() : "";
 
         html += `
             <tr>
-                <td>${imgFile ? `<img src="images/${imgFile}" class="thumbnail">` : "—"}</td>
+                <td>${row.Hinh ? `<img src="images/${row.Hinh}" class="thumbnail">` : "—"}</td>
                 <td>${row.Barcode || ""}</td>
                 <td>${row.Ten || ""}</td>
                 <td>${row.TonKho || 0}</td>
@@ -82,9 +85,9 @@ function renderTable(data) {
     document.getElementById("table").innerHTML = html;
 }
 
-/* -------------------------
-    SEARCH
---------------------------*/
+/* ---------------------------------------------------
+   SEARCH
+------------------------------------------------------ */
 function search(keyword) {
     keyword = keyword.toLowerCase().trim();
 
@@ -96,9 +99,9 @@ function search(keyword) {
     renderTable(filtered);
 }
 
-/* -------------------------
-    SORT TỒN KHO (tăng/giảm)
---------------------------*/
+/* ---------------------------------------------------
+   SORT TỒN KHO
+------------------------------------------------------ */
 let sortAsc = true;
 
 function sortTonKho() {
@@ -112,4 +115,5 @@ function sortTonKho() {
     renderTable(sorted);
 }
 
+// Start
 loadInventory();
