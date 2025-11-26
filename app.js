@@ -61,7 +61,6 @@ function renderGroupedTable(data) {
     });
 
     let html = `
-        <input class="search-box" type="text" placeholder="🔎 Tìm mẫu hoặc barcode…" oninput="search(this.value)">
         <div class="table-container">
         <table>
             <tr>
@@ -233,3 +232,4 @@ function search(keyword) {
 
 
 loadInventory();
+
