@@ -119,3 +119,11 @@ tr:hover {
 .normal-stock {
     color: #2c3e50;
 }
+
+/* ====== LOẠI ====== */
+
+.group-row {
+    background: #dff1ff !important;
+    color: #2c3e50;
+    font-weight: 700;
+}
