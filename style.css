@@ -143,3 +143,86 @@ td {
     border: 1px solid #ccc;
     font-size: 14px;
 }
+
+
+/* ============================
+   👉 TỐI ƯU GIAO DIỆN MOBILE
+===============================*/
+@media (max-width: 768px) {
+
+    h1 {
+        font-size: 22px;
+        margin-bottom: 15px;
+    }
+
+    .search-box {
+        width: 95%;
+        font-size: 16px;
+        padding: 10px 12px;
+        margin-bottom: 15px;
+    }
+
+    table {
+        font-size: 14px;
+    }
+
+    th, td {
+        padding: 8px;
+    }
+
+    .thumbnail {
+        width: 45px;
+        height: 45px;
+        border-radius: 8px;
+    }
+
+    .buy-area {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+        margin-top: 6px;
+    }
+
+    .qty-input {
+        width: 70px;
+        padding: 6px;
+        font-size: 14px;
+    }
+
+    .buy-btn {
+        padding: 8px 14px;
+        font-size: 14px;
+        border-radius: 6px;
+    }
+
+    .group-row {
+        font-size: 15px;
+    }
+
+    .arrow {
+        font-size: 18px;
+    }
+}
+
+@media (max-width: 480px) {
+
+    table {
+        font-size: 13px;
+    }
+
+    .thumbnail {
+        width: 40px;
+        height: 40px;
+    }
+
+    .qty-input {
+        width: 60px;
+        font-size: 13px;
+    }
+
+    .buy-btn {
+        padding: 7px 12px;
+        font-size: 13px;
+    }
+}
