@@ -77,7 +77,7 @@ function renderGroupedTable(data) {
         html += `
             <tr class="group-row" onclick="toggleGroup('${id}', this)">
                 <td><span class="arrow">▸</span> <b>${loai}</b></td>
-                <td>—</td>
+                <td>${list[0].Barcode || ""}</td>
                 <td><b>${tong}</b></td>
                 <td>${anhDaiDien}</td>
             </tr>
@@ -145,3 +145,4 @@ function search(keyword) {
 }
 
 loadInventory();
+
