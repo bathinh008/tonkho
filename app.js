@@ -9,10 +9,9 @@ async function loadInventory() {
         let csvText = await res.text();
         const data = parseCSV(csvText);
 
-        // Lưu toàn cục để tìm kiếm / sort
         window.inventoryData = data;
 
-        renderTable(data);
+        renderGroupedTable(data);
 
     } catch (err) {
         tableDiv.innerHTML = "❌ Không tải được dữ liệu!";
@@ -20,16 +19,13 @@ async function loadInventory() {
     }
 }
 
-/* ---------------------------------------------------
-   PARSE CSV CHUẨN (xử lý dấu phẩy, dấu ngoặc, BOM)
------------------------------------------------------- */
+/* ------- CSV PARSER ---------- */
 function parseCSV(str) {
     const rows = [];
     const lines = str.trim().split("\n");
 
-    // Lấy header chính xác
-    const rawHeaders = lines.shift();
-    const headers = rawHeaders
+    const headers = lines
+        .shift()
         .match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g)
         .map(h => h.replace(/"/g, "").trim());
 
@@ -39,94 +35,78 @@ function parseCSV(str) {
 
         let obj = {};
         headers.forEach((h, i) => {
-            const val = (values[i] || "").replace(/"/g, "").trim();
-            obj[h] = val;
+            obj[h] = (values[i] || "").replace(/"/g, "").trim();
         });
+
         rows.push(obj);
     });
 
     return rows;
 }
 
-/* ---------------------------------------------------
-   RENDER TABLE
------------------------------------------------------- */
-function renderTable(data) {
-    if (!data || data.length === 0) {
-        document.getElementById("table").innerHTML = "Không có dữ liệu";
-        return;
-    }
+
+/* ------- HIỂN THỊ BẢNG THEO LOẠI TỦ ---------- */
+function renderGroupedTable(data) {
+    let grouped = {};
+
+    // Nhóm theo LoaiTu
+    data.forEach(item => {
+        let loai = item.LoaiTu || "Không phân loại";
+        if (!grouped[loai]) grouped[loai] = [];
+
+        grouped[loai].push(item);
+    });
 
     let html = `
-        <input class="search-box" type="text" placeholder="🔎 Tìm barcode hoặc tên..." oninput="search(this.value)">
+        <input class="search-box" type="text" placeholder="🔎 Tìm tên mẫu..." oninput="search(this.value)">
         <div class="table-container">
         <table>
             <tr>
+                <th>Loại tủ / Mẫu</th>
+                <th>Tồn kho</th>
                 <th>Hình</th>
-                <th>Mã vạch</th>
-                <th>Tên hàng</th>
-                <th onclick="sortTonKho()" style="cursor:pointer">Tồn kho ⬍</th>
             </tr>
     `;
 
-    data.forEach(row => {
+    Object.keys(grouped).forEach(loai => {
+        let list = grouped[loai];
+        let tong = list.reduce((sum, x) => sum + parseInt(x.TonKho || 0), 0);
 
+        // dòng tổng loại
         html += `
-            <tr>
-                <td>${row.Hinh ? `<img src="images/${row.Hinh}" class="thumbnail">` : "—"}</td>
-                <td>${row.Barcode || ""}</td>
-                <td>${row.Ten || ""}</td>
-                <td class="${getStockClass(row.TonKho)}">${row.TonKho || 0}</td>
+            <tr class="group-row">
+                <td><b>${loai}</b></td>
+                <td><b>${tong}</b></td>
+                <td>—</td>
             </tr>
         `;
+
+        // các mẫu con
+        list.forEach(item => {
+            html += `
+                <tr>
+                    <td style="padding-left:30px">${item.TenMau}</td>
+                    <td>${item.TonKho}</td>
+                    <td>${item.Hinh ? `<img src="images/${item.Hinh}" class="thumbnail">` : "—"}</td>
+                </tr>
+            `;
+        });
     });
 
     html += "</table></div>";
     document.getElementById("table").innerHTML = html;
 }
 
-/* ---------------------------------------------------
-   BÁO TỒN KHO
------------------------------------------------------- */
 
-function getStockClass(qty) {
-    qty = parseInt(qty || 0);
-
-    if (qty <= 3) return "low-stock";       // đỏ
-    if (qty <= 10) return "medium-stock";   // cam
-    return "normal-stock";                  // xanh / đen
-}
-
-/* ---------------------------------------------------
-   SEARCH
------------------------------------------------------- */
+/* ------- TÌM KIẾM THEO TÊN MẪU ---------- */
 function search(keyword) {
     keyword = keyword.toLowerCase().trim();
 
     const filtered = window.inventoryData.filter(item =>
-        (item.Barcode || "").toLowerCase().includes(keyword) ||
-        (item.Ten || "").toLowerCase().includes(keyword)
+        (item.TenMau || "").toLowerCase().includes(keyword)
     );
 
-    renderTable(filtered);
+    renderGroupedTable(filtered);
 }
 
-/* ---------------------------------------------------
-   SORT TỒN KHO
------------------------------------------------------- */
-let sortAsc = true;
-
-function sortTonKho() {
-    const sorted = [...window.inventoryData].sort((a, b) => {
-        const A = parseInt(a.TonKho || 0);
-        const B = parseInt(b.TonKho || 0);
-        return sortAsc ? A - B : B - A;
-    });
-
-    sortAsc = !sortAsc;
-    renderTable(sorted);
-}
-
-// Start
 loadInventory();
-
