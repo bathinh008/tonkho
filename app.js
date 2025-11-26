@@ -86,7 +86,7 @@ function renderGroupedTable(data) {
 
         list.forEach(item => {
             let rowClass = getStockClass(item.TonKho);
-
+        
             html += `
                 <tr class="child-row ${rowClass}" data-group="${id}">
                     <td style="padding-left:40px">${item.TenMau}</td>
@@ -94,7 +94,11 @@ function renderGroupedTable(data) {
                     <td>${item.TonKho}</td>
                     <td>
                         ${item.Hinh ? `<img src="images/${item.Hinh}" class="thumbnail">` : "—"}
-                        <button class="buy-btn" onclick="buyItem('${item.TenMau}', '${item.Barcode}')">Mua</button>
+                        
+                        <div class="buy-area">
+                            <input type="number" id="qty_${item.Barcode}" class="qty-input" value="1" min="1">
+                            <button class="buy-btn" onclick="buyItem('${item.TenMau}', '${item.Barcode}')">Mua</button>
+                        </div>
                     </td>
                 </tr>
             `;
@@ -168,3 +172,4 @@ function search(keyword) {
 }
 
 loadInventory();
+
