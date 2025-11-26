@@ -1,4 +1,4 @@
-const sheetCSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQs5iOdYRcQ_ekDgPPzIw7FRwN1tiF7hY3YWPAw3_6ga6xUMt-SgeiNzSMpVotjUypdAAZUAvRfReAu/pub?gid=0&single=true&output=csv";
+const sheetCSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQs5iOdYRcQ_ekDgPPzIw7FRwN1tiF7hY3YWPAw3_6ga6xUMt-SgeiNzSMpVotjUypdAAZUAvRfReAu/pub?output=csv";
 
 async function loadInventory() {
     const tableDiv = document.getElementById("table");
@@ -74,5 +74,6 @@ function search(keyword) {
 }
 
 loadInventory();
+
 
 
