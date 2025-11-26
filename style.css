@@ -1,3 +1,6 @@
+/* --------------------------------------------------
+   RESET + BASE
+--------------------------------------------------*/
 * {
     margin: 0;
     padding: 0;
@@ -19,6 +22,9 @@ h1 {
     font-weight: 700;
 }
 
+/* --------------------------------------------------
+   SEARCH BOX
+--------------------------------------------------*/
 .search-box {
     width: 100%;
     max-width: 400px;
@@ -32,11 +38,13 @@ h1 {
 }
 
 .search-box:focus {
-    outline: none;
     border-color: #3498db;
     box-shadow: 0 0 8px rgba(52,152,219,0.3);
 }
 
+/* --------------------------------------------------
+   TABLE (PC)
+--------------------------------------------------*/
 .table-container {
     overflow-x: auto;
     border-radius: 12px;
@@ -63,6 +71,9 @@ td {
     border-bottom: 1px solid #eee;
 }
 
+/* --------------------------------------------------
+   IMAGES
+--------------------------------------------------*/
 .thumbnail {
     width: 60px;
     height: 60px;
@@ -71,6 +82,9 @@ td {
     box-shadow: 0 2px 6px rgba(0,0,0,0.2);
 }
 
+/* --------------------------------------------------
+   GROUP ROWS (HEADER)
+--------------------------------------------------*/
 .group-row {
     background: #dff1ff !important;
     cursor: pointer;
@@ -80,40 +94,25 @@ td {
     background: #cbe7ff !important;
 }
 
+/* --------------------------------------------------
+   STOCK COLORING
+--------------------------------------------------*/
 .row-low-stock {
-    background: #ffcccc !important;
+    background: #ffeded !important;
 }
 
 .row-medium-stock {
-    background: #ffe6cc !important;
+    background: #fff3e0 !important;
 }
 
 .row-normal-stock {
-    background: #e8f7ff !important;
+    background: #eefaff !important;
 }
 
-/* Arrow */
-.arrow {
-    display: inline-block;
-    transition: transform 0.25s ease;
-    margin-right: 5px;
-}
-
-.arrow-open {
-    transform: rotate(90deg);
-}
-
-/* Slide animation */
-.child-row {
-    max-height: 0;
-    overflow: hidden;
-    transition: all 0.25s ease;
-    display: none;
-}
-
-/* Nút mua */
+/* --------------------------------------------------
+   BUY BUTTON + INPUT
+--------------------------------------------------*/
 .buy-btn {
-    margin-top: 5px;
     padding: 6px 12px;
     background: #27ae60;
     color: white;
@@ -122,7 +121,6 @@ td {
     font-size: 14px;
     cursor: pointer;
     transition: 0.2s;
-    display: inline-block;
 }
 
 .buy-btn:hover {
@@ -144,10 +142,9 @@ td {
     font-size: 14px;
 }
 
-
-/* ============================
-   👉 TỐI ƯU GIAO DIỆN MOBILE
-===============================*/
+/* --------------------------------------------------
+   MOBILE RESPONSIVE
+--------------------------------------------------*/
 @media (max-width: 768px) {
 
     h1 {
@@ -157,9 +154,9 @@ td {
 
     .search-box {
         width: 95%;
-        font-size: 16px;
         padding: 10px 12px;
         margin-bottom: 15px;
+        font-size: 16px;
     }
 
     table {
@@ -173,35 +170,22 @@ td {
     .thumbnail {
         width: 45px;
         height: 45px;
-        border-radius: 8px;
     }
 
     .buy-area {
-        display: flex;
         flex-direction: column;
         align-items: flex-start;
         gap: 6px;
-        margin-top: 6px;
     }
 
     .qty-input {
         width: 70px;
-        padding: 6px;
         font-size: 14px;
     }
 
     .buy-btn {
         padding: 8px 14px;
         font-size: 14px;
-        border-radius: 6px;
-    }
-
-    .group-row {
-        font-size: 15px;
-    }
-
-    .arrow {
-        font-size: 18px;
     }
 }
 
