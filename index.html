@@ -1,46 +1,19 @@
 <!DOCTYPE html>
-<html>
+<html lang="vi">
 <head>
-    <meta charset="utf-8">
+    <meta charset="UTF-8">
     <title>Tồn Kho Tủ</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<h1>Danh sách tồn kho</h1>
+<h1>📦 Hệ Thống Xem Tồn Kho Tủ</h1>
 
+<!-- Khu vực hiển thị bảng -->
 <div id="table"></div>
 
-<script>
-async function loadData() {
-    let res = await fetch("get_inventory.php");
-    let data = await res.json();
-
-    if (data.status !== "success") {
-        document.getElementById("table").innerHTML = "Lỗi tải dữ liệu";
-        return;
-    }
-
-    let html = "<table border='1' cellpadding='5'>";
-    html += "<tr>";
-    Object.keys(data.data[0]).forEach(col => {
-        html += `<th>${col}</th>`;
-    });
-    html += "</tr>";
-
-    data.data.forEach(row => {
-        html += "<tr>";
-        Object.values(row).forEach(val => {
-            html += `<td>${val}</td>`;
-        });
-        html += "</tr>";
-    });
-
-    html += "</table>";
-    document.getElementById("table").innerHTML = html;
-}
-
-loadData();
-</script>
+<!-- Nạp JS -->
+<script src="app.js"></script>
 
 </body>
 </html>
