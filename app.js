@@ -9,7 +9,9 @@ async function loadInventory() {
         let csvText = await res.text();
         const data = parseCSV(csvText);
 
+        // Lưu data toàn cục
         window.inventoryData = data;
+
         renderTable(data);
 
     } catch (err) {
@@ -18,18 +20,33 @@ async function loadInventory() {
     }
 }
 
-// Parse CSV thành array of objects
+/* -------------------------
+   CSV PARSER CHUẨN
+--------------------------*/
 function parseCSV(str) {
+    const rows = [];
     const lines = str.trim().split("\n");
-    const headers = lines.shift().split(",");
-    return lines.map(line => {
-        const values = line.split(",");
+
+    // Tách header theo CSV chuẩn (xử lý trường có dấu phẩy bằng "")
+    const headers = lines.shift().match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
+
+    lines.forEach(line => {
+        const values = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
+        if (!values) return;
+
         let obj = {};
-        headers.forEach((h, i) => obj[h] = values[i]);
-        return obj;
+        headers.forEach((h, i) => {
+            obj[h.replace(/"/g, "")] = (values[i] || "").replace(/"/g, "");
+        });
+        rows.push(obj);
     });
+
+    return rows;
 }
 
+/* -------------------------
+   RENDER TABLE
+--------------------------*/
 function renderTable(data) {
     if (!data || data.length === 0) {
         document.getElementById("table").innerHTML = "Không có dữ liệu";
@@ -44,17 +61,19 @@ function renderTable(data) {
                 <th>Hình</th>
                 <th>Mã vạch</th>
                 <th>Tên hàng</th>
-                <th>Tồn kho</th>
+                <th onclick="sortTonKho()" style="cursor:pointer">Tồn kho ⬍</th>
             </tr>
     `;
 
     data.forEach(row => {
+        const imgFile = row.Hinh ? row.Hinh.trim() : "";
+
         html += `
             <tr>
-                <td>${row.Hinh ? `<img src="images/${row.Hinh}" class="thumbnail">` : "—"}</td>
-                <td>${row.Barcode}</td>
-                <td>${row.Ten}</td>
-                <td>${row.TonKho}</td>
+                <td>${imgFile ? `<img src="images/${imgFile}" class="thumbnail">` : "—"}</td>
+                <td>${row.Barcode || ""}</td>
+                <td>${row.Ten || ""}</td>
+                <td>${row.TonKho || 0}</td>
             </tr>
         `;
     });
@@ -63,17 +82,34 @@ function renderTable(data) {
     document.getElementById("table").innerHTML = html;
 }
 
-// Tìm kiếm
+/* -------------------------
+    SEARCH
+--------------------------*/
 function search(keyword) {
-    keyword = keyword.toLowerCase();
+    keyword = keyword.toLowerCase().trim();
+
     const filtered = window.inventoryData.filter(item =>
         (item.Barcode || "").toLowerCase().includes(keyword) ||
         (item.Ten || "").toLowerCase().includes(keyword)
     );
+
     renderTable(filtered);
 }
 
+/* -------------------------
+    SORT TỒN KHO (tăng/giảm)
+--------------------------*/
+let sortAsc = true;
+
+function sortTonKho() {
+    const sorted = [...window.inventoryData].sort((a, b) => {
+        const A = parseInt(a.TonKho || 0);
+        const B = parseInt(b.TonKho || 0);
+        return sortAsc ? A - B : B - A;
+    });
+
+    sortAsc = !sortAsc;
+    renderTable(sorted);
+}
+
 loadInventory();
-
-
-
