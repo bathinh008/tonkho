@@ -142,15 +142,26 @@ function getStockClass(qty) {
 
 /* ======================= BUY ITEM (TRỪ TỒN KHO) ======================= */
 function buyItem(ten, barcode) {
+    let qtyField = document.getElementById("qty_" + barcode);
+    let qty = parseInt(qtyField.value) || 1;
+
+    if (qty <= 0) qty = 1;
+
     fetch(API_URL, {
         method: "POST",
-        body: JSON.stringify({ barcode }),
+        body: JSON.stringify({ barcode, qty }),
         headers: { "Content-Type": "application/json" }
     })
     .then(res => res.json())
     .then(data => {
         if (data.success) {
-            alert(`Đã trừ tồn kho!\nMẫu: ${ten}\nBarcode: ${barcode}\nTồn mới: ${data.newStock}`);
+            alert(
+                `Đã trừ tồn kho!\n` +
+                `Mẫu: ${ten}\n` +
+                `Barcode: ${barcode}\n` +
+                `Số lượng mua: ${qty}\n` +
+                `Tồn mới: ${data.newStock}`
+            );
             loadInventory();
         } else {
             alert("Không tìm thấy barcode trong Google Sheet.");
@@ -172,4 +183,5 @@ function search(keyword) {
 }
 
 loadInventory();
+
 
