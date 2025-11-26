@@ -1,63 +1,75 @@
 async function loadInventory() {
     const tableDiv = document.getElementById("table");
-    tableDiv.innerHTML = "Đang tải dữ liệu...";
+    tableDiv.innerHTML = "⏳ Đang tải dữ liệu từ server...";
 
     try {
-        let res = await fetch("get_inventory.php");
-        let data = await res.json();
+        let response = await fetch("get_inventory.php");
+        let json = await response.json();
 
-        if (data.status !== "success") {
-            tableDiv.innerHTML = "❌ Lỗi tải dữ liệu";
+        if (json.status !== "success") {
+            tableDiv.innerHTML = "❌ Lỗi dữ liệu: " + json.message;
             return;
         }
 
-        window.inventoryData = data.data;  // lưu tạm để filter
-        renderTable(data.data);
+        // Lưu dữ liệu để filter
+        window.inventoryData = json.data;
 
-    } catch (err) {
-        tableDiv.innerHTML = "❌ Không kết nối được server";
+        // Render bảng
+        renderTable(json.data);
+
+    } catch (e) {
+        tableDiv.innerHTML = "❌ Không kết nối được PHP backend!";
+        console.error(e);
     }
 }
 
+
+// Render bảng HTML
 function renderTable(data) {
+    if (!data || data.length === 0) {
+        document.getElementById("table").innerHTML = "Không có dữ liệu";
+        return;
+    }
+
     let html = `
-        <input class="search-box" type="text" placeholder="Tìm mã vạch / tên..." oninput="search(this.value)">
+        <input class="search-box" type="text" placeholder="🔎 Tìm barcode hoặc tên..." oninput="search(this.value)">
         <div class="table-container">
         <table>
             <tr>
                 <th>Hình</th>
                 <th>Mã vạch</th>
-                <th>Tên</th>
+                <th>Tên hàng</th>
                 <th>Tồn kho</th>
             </tr>
     `;
 
-    data.forEach(item => {
+    data.forEach(row => {
         html += `
             <tr>
-                <td>
-                    ${item.Hinh ? `<img class="thumbnail" src="images/${item.Hinh}">` : '—'}
-                </td>
-                <td>${item.Barcode || ""}</td>
-                <td>${item.Ten || ""}</td>
-                <td>${item.TonKho || 0}</td>
+                <td>${row.Hinh ? `<img src="images/${row.Hinh}" class="thumbnail">` : "—"}</td>
+                <td>${row.Barcode || ""}</td>
+                <td>${row.Ten || ""}</td>
+                <td>${row.TonKho || 0}</td>
             </tr>
         `;
     });
 
     html += "</table></div>";
+
     document.getElementById("table").innerHTML = html;
 }
 
-function search(text) {
-    text = text.toLowerCase();
+// Tìm kiếm
+function search(keyword) {
+    keyword = keyword.toLowerCase();
 
     const filtered = window.inventoryData.filter(item =>
-        (item.Barcode || "").toLowerCase().includes(text) ||
-        (item.Ten || "").toLowerCase().includes(text)
+        (item.Barcode || "").toLowerCase().includes(keyword) ||
+        (item.Ten || "").toLowerCase().includes(keyword)
     );
 
     renderTable(filtered);
 }
 
+// Auto load
 loadInventory();
