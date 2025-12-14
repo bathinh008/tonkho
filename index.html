@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kho Hàng tủ</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        /* --- 1. GLOBAL STYLES --- */
+        :root {
+            --primary: #4F46E5;
+            --primary-hover: #4338ca;
+            --bg-body: #F3F4F6;
+            --bg-card: #ffffff;
+            --text-main: #111827;
+            --text-sub: #6B7280;
+            --border: #E5E7EB;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --radius: 12px;
+        }
+
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: var(--bg-body); 
+            color: var(--text-main); 
+            margin: 0; padding: 0;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .main-wrapper { max-width: 1200px; margin: 0 auto; padding: 40px 20px; }
+
+        /* Header & Search */
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        h1 { font-size: 28px; font-weight: 700; color: #1F2937; margin: 0; }
+        
+        .admin-btn {
+            background: white; border: 1px solid var(--border); color: var(--text-main);
+            padding: 10px 16px; border-radius: 30px; text-decoration: none;
+            font-weight: 600; font-size: 14px; box-shadow: var(--shadow-sm); display: flex; align-items: center; gap: 6px;
+        }
+
+        .search-wrapper { position: relative; max-width: 500px; margin: 0 auto 40px auto; }
+        .search-box {
+            width: 100%; padding: 16px 20px 16px 45px; border: none; border-radius: 50px;
+            background: white; font-size: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); outline: none; box-sizing: border-box;
+        }
+        .search-icon { position: absolute; left: 18px; top: 50%; transform: translateY(-50%); color: #9CA3AF; }
+
+        /* --- 2. PC TABLE --- */
+        .table-card { background: var(--bg-card); border-radius: var(--radius); box-shadow: var(--shadow-sm); overflow: hidden; border: 1px solid var(--border); }
+        table { width: 100%; border-collapse: collapse; }
+        thead th { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); position: sticky; top: 0; z-index: 10; text-align: left; padding: 16px 24px; font-size: 12px; text-transform: uppercase; color: var(--text-sub); font-weight: 600; border-bottom: 1px solid var(--border); }
+        tbody tr { border-bottom: 1px solid var(--border); }
+        tbody td { padding: 16px 24px; vertical-align: middle; }
+        .group-row { background-color: #F9FAFB; cursor: pointer; font-weight: 600; color: #374151; }
+        .product-img { width: 180px; height: 180px; object-fit: cover; border-radius: 8px; border: 1px solid #eee; }
+
+        /* Badges */
+        .badge { display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+        .bg-green { background: #ECFDF5; color: #059669; }
+        .bg-yellow { background: #FFFBEB; color: #D97706; }
+        .bg-red { background: #FEF2F2; color: #DC2626; }
+        .bg-gray { background: #F3F4F6; color: #4B5563; border: 1px solid #E5E7EB; }
+
+        /* Buttons */
+        .btn-buy { background: var(--primary); color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 500; cursor: pointer; }
+        .qty-wrapper { display: flex; align-items: center; border: 1px solid #D1D5DB; border-radius: 8px; overflow: hidden; background: white; }
+        .qty-wrapper button { background: white; border: none; padding: 5px 12px; cursor: pointer; font-size: 16px; font-weight: bold; color: #374151; }
+        .qty-input { width: 30px; text-align: center; border: none; font-weight: 600; outline: none; }
+
+        /* --- 3. MOBILE VIEW (NEW DESIGN) --- */
+        .mobile-view { display: none; }
+        
+        @media (max-width: 768px) {
+            .table-card { display: none; }
+            .mobile-view { display: flex; flex-direction: column; gap: 16px; }
+            .main-wrapper { padding: 15px; }
+            h1 { font-size: 20px; }
+            header { margin-bottom: 20px; }
+            .search-wrapper { margin-bottom: 20px; }
+            
+            /* Mobile Card Design */
+            .m-card {
+                background: white; border-radius: 12px;
+                box-shadow: 0 2px 5px rgba(0,0,0,0.05); border: 1px solid var(--border);
+                overflow: hidden;
+            }
+            
+            /* Phần trên: Ảnh + Thông tin */
+            .m-body { padding: 12px; display: flex; gap: 12px; }
+            .m-img { 
+                width: 200px; height: 200px; 
+                object-fit: cover; border-radius: 8px; flex-shrink: 0; 
+                background: #f9f9f9; border: 1px solid #eee;
+            }
+            .m-info { flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
+            .m-title { font-weight: 600; color: #111827; font-size: 15px; line-height: 1.3; margin-bottom: 4px; }
+            .m-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 6px; }
+            .m-barcode { font-size: 12px; color: #6B7280; font-family: monospace; background: #F3F4F6; padding: 2px 6px; border-radius: 4px; }
+            
+            /* Phần dưới: Actions bar */
+            .m-footer { 
+                background: #F9FAFB; padding: 10px 12px; 
+                border-top: 1px solid #F3F4F6;
+                display: flex; justify-content: space-between; align-items: center; 
+            }
+            .m-stock-status { font-size: 13px; font-weight: 600; }
+            .m-actions { display: flex; gap: 10px; align-items: center; }
+            
+            /* Action Elements on Mobile */
+            .m-qty-wrap { display: flex; align-items: center; border: 1px solid #ddd; border-radius: 6px; background: white; height: 36px; }
+            .m-qty-btn { width: 30px; height: 100%; border: none; background: transparent; font-weight: bold; font-size: 16px; color: #555; }
+            .m-qty-inp { width: 30px; text-align: center; border: none; font-weight: 600; font-size: 14px; }
+            .m-btn-buy { 
+                background: var(--primary); color: white; border: none; 
+                height: 36px; padding: 0 20px; border-radius: 6px; 
+                font-weight: 600; font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="main-wrapper">
+        <header>
+            <h1>📦 Kho Hàng</h1>
+            <a href="admin.html" class="admin-btn">🔐 Admin</a>
+        </header>
+
+        <div class="search-wrapper">
+            <span class="search-icon">🔍</span>
+            <input class="search-box" type="text" placeholder="Tìm tên, mã vạch, loại..." oninput="search(this.value)">
+        </div>
+
+        <div id="pc-table" class="table-card"></div>
+        <div id="mobile-list" class="mobile-view"></div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://gpmuckoydhrokpioltem.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdwbXVja295ZGhyb2twaW9sdGVtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU3MTMzNTcsImV4cCI6MjA4MTI4OTM1N30.Fqe5U2hm_fERI6ZLc_FQ1SMh5F4sYOrxr8JqLlwLKI0';
+        const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        function isMobile() { return window.innerWidth <= 768; }
+
+        async function loadInventory() {
+            const container = isMobile() ? document.getElementById("mobile-list") : document.getElementById("pc-table");
+            container.innerHTML = '<div style="padding:40px; text-align:center; color:#6B7280">⏳ Đang tải dữ liệu...</div>';
+
+            try {
+                let { data, error } = await db.from('inventory').select('*');
+                if (error) throw error;
+                const mapped = data.map(i => ({ ...i, TonKho: parseInt(i.ton_kho || 0) }));
+                window.inventoryData = mapped;
+                renderApp(mapped);
+            } catch (err) {
+                container.innerHTML = `<div style="padding:20px; text-align:center; color:red">❌ ${err.message}</div>`;
+            }
+        }
+
+        function renderApp(data) {
+            renderPC(data);
+            renderMobile(data);
+        }
+
+        // --- RENDER PC ---
+        function renderPC(data) {
+            let grouped = {};
+            data.forEach(item => {
+                let key = item.loai_tu || "Khác";
+                if (!grouped[key]) grouped[key] = [];
+                grouped[key].push(item);
+            });
+
+            let html = `<table><thead><tr><th width="30%">Tên mẫu & Loại</th><th width="15%">Barcode</th><th width="15%">Tồn kho</th><th width="15%">Hình ảnh</th><th width="25%">Thao tác</th></tr></thead><tbody>`;
+
+            Object.keys(grouped).forEach((loai, idx) => {
+                let items = grouped[loai];
+                let total = items.reduce((s, i) => s + i.TonKho, 0);
+                if (total <= 0) return;
+                let groupId = `g_${idx}`;
+                
+                html += `<tr class="group-row" onclick="toggleGroup('${groupId}', this)"><td colspan="5">▶ ${loai} <span style="font-weight:400; color:#6B7280">(${total})</span></td></tr>`;
+
+                items.forEach((item, i) => {
+                    if (item.TonKho <= 0) return;
+                    let rowKey = `${idx}_${i}`;
+                    html += `
+                        <tr class="child-row" data-group="${groupId}" style="display:none">
+                            <td style="padding-left:30px">
+                                <div style="font-weight:600">${item.ten_mau}</div>
+                                <div style="font-size:13px; color:#6B7280">${item.loai_tu}</div>
+                            </td>
+                            <td style="font-family:monospace">${item.barcode}</td>
+                            <td>${getStockBadge(item.TonKho, rowKey)}</td>
+                            <td>${item.hinh ? `<img src="images/${item.hinh}" class="product-img">` : ''}</td>
+                            <td>
+                                <div style="display:flex; gap:10px; align-items:center;">
+                                    <div class="qty-wrapper"><button onclick="upVal('${rowKey}',-1)">-</button><input id="qty_${rowKey}" class="qty-input" value="1"><button onclick="upVal('${rowKey}',1)">+</button></div>
+                                    <button class="btn-buy" onclick="buyItem('${item.barcode}', '${item.hinh}', '${rowKey}')">Xuất</button>
+                                </div>
+                            </td>
+                        </tr>`;
+                });
+            });
+            html += `</tbody></table>`;
+            document.getElementById("pc-table").innerHTML = html;
+        }
+
+        // --- RENDER MOBILE (NÂNG CẤP) ---
+        function renderMobile(data) {
+            let html = '';
+            data.forEach((item, idx) => {
+                if (item.TonKho <= 0) return;
+                let key = `m_${idx}`;
+                let stockColor = item.TonKho > 10 ? '#059669' : (item.TonKho > 3 ? '#D97706' : '#DC2626');
+                
+                html += `
+                    <div class="m-card" id="card_${key}">
+                        <div class="m-body">
+                            ${item.hinh ? `<img src="images/${item.hinh}" class="m-img">` : '<div class="m-img"></div>'}
+                            <div class="m-info">
+                                <div>
+                                    <div class="m-title">${item.ten_mau}</div>
+                                    <div class="m-meta">
+                                        <span class="badge bg-gray">${item.loai_tu || 'Khác'}</span>
+                                        <span class="m-barcode">${item.barcode}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="m-footer">
+                            <div class="m-stock-status" style="color:${stockColor}">
+                                <span id="mtxt_${key}">Tồn kho: ${item.TonKho}</span>
+                            </div>
+                            <div class="m-actions">
+                                <div class="m-qty-wrap">
+                                    <button class="m-qty-btn" onclick="upVal('${key}', -1)">-</button>
+                                    <input id="qty_${key}" class="m-qty-inp" type="number" value="1" readonly>
+                                    <button class="m-qty-btn" onclick="upVal('${key}', 1)">+</button>
+                                </div>
+                                <button class="m-btn-buy" onclick="buyItem('${item.barcode}', '${item.hinh}', '${key}')">Xuất</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            document.getElementById("mobile-list").innerHTML = html;
+        }
+
+        // --- ACTIONS ---
+        function getStockBadge(qty, id) {
+            let cls = qty > 10 ? 'bg-green' : (qty > 3 ? 'bg-yellow' : 'bg-red');
+            let txt = qty > 10 ? 'Sẵn hàng' : 'Sắp hết';
+            return `<span id="badge_${id}" class="badge ${cls}">${qty} • ${txt}</span>`;
+        }
+
+        function upVal(id, delta) {
+            let el = document.getElementById(`qty_${id}`);
+            let val = parseInt(el.value) + delta;
+            if (val >= 1) el.value = val;
+        }
+
+        function toggleGroup(id, tr) {
+            let rows = document.querySelectorAll(`tr[data-group="${id}"]`);
+            let isOpen = tr.style.background.includes("E5"); // check đơn giản
+            rows.forEach(r => r.style.display = r.style.display === 'none' ? 'table-row' : 'none');
+        }
+
+        function search(k) {
+            k = k.toLowerCase().trim();
+            const filtered = window.inventoryData.filter(i => 
+                (i.ten_mau+i.barcode+i.loai_tu).toLowerCase().includes(k)
+            );
+            renderApp(filtered);
+            if(k && !isMobile()) setTimeout(() => document.querySelectorAll('.child-row').forEach(r => r.style.display='table-row'), 100);
+        }
+
+        async function buyItem(barcode, hinh, uiId) {
+            let qty = parseInt(document.getElementById(`qty_${uiId}`).value);
+            if (!confirm(`Xác nhận xuất ${qty} cái?`)) return;
+
+            try {
+                const { data, error } = await db.rpc('reduce_stock', {
+                    p_barcode: String(barcode).trim(), p_hinh: String(hinh).trim(), p_qty: qty
+                });
+
+                if (error || !data.success) throw new Error(data?.message || error.message);
+
+                alert(`✅ Xong! Tồn mới: ${data.newStock}`);
+                
+                // Update Logic
+                let item = window.inventoryData.find(i => i.barcode == barcode && i.hinh == hinh);
+                if(item) item.TonKho = data.newStock;
+
+                if (isMobile()) {
+                    let txt = document.getElementById(`mtxt_${uiId}`);
+                    if(txt) txt.innerText = "Sẵn: " + data.newStock;
+                } else {
+                    let badge = document.getElementById(`badge_${uiId}`);
+                    if(badge) badge.outerHTML = getStockBadge(data.newStock, uiId);
+                }
+                
+                if(data.newStock <= 0) loadInventory();
+
+            } catch (err) { alert("❌ Lỗi: " + err.message); }
+        }
+
+        loadInventory();
+    </script>
+</body>
+</html>

@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Trị Hệ Thống</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        /* --- 1. GLOBAL VARIABLES (Đồng bộ với Index) --- */
+        :root {
+            --primary: #4F46E5;
+            --primary-hover: #4338ca;
+            --danger: #EF4444;
+            --warning: #F59E0B;
+            --bg-body: #F3F4F6;
+            --bg-card: #ffffff;
+            --text-main: #111827;
+            --text-sub: #6B7280;
+            --border: #E5E7EB;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --radius: 12px;
+        }
+
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: var(--bg-body); 
+            color: var(--text-main); 
+            margin: 0; padding: 0;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* --- 2. LOGIN PAGE STYLE --- */
+        .login-wrapper {
+            min-height: 100vh;
+            display: flex; align-items: center; justify-content: center;
+            background: linear-gradient(135deg, #E0E7FF 0%, #F3F4F6 100%);
+        }
+        .login-card {
+            background: white; padding: 40px; border-radius: 16px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            width: 100%; max-width: 360px; text-align: center;
+        }
+        .login-title { font-size: 24px; font-weight: 700; margin-bottom: 8px; color: #1F2937; }
+        .login-sub { color: #6B7280; margin-bottom: 24px; font-size: 14px; }
+        
+        .input-group { margin-bottom: 16px; text-align: left; }
+        .modern-input {
+            width: 100%; padding: 12px 16px; border: 1px solid var(--border);
+            border-radius: 8px; font-size: 15px; outline: none; box-sizing: border-box;
+            transition: all 0.2s;
+        }
+        .modern-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
+        
+        .btn-primary {
+            width: 100%; background: var(--primary); color: white; border: none;
+            padding: 12px; border-radius: 8px; font-weight: 600; cursor: pointer;
+            transition: background 0.2s; font-size: 15px;
+        }
+        .btn-primary:hover { background: var(--primary-hover); }
+
+        .link-home { margin-top: 20px; display: block; color: var(--text-sub); text-decoration: none; font-size: 13px; }
+        .link-home:hover { color: var(--primary); }
+
+        /* --- 3. DASHBOARD STYLE --- */
+        #adminPanel { display: none; max-width: 1200px; margin: 0 auto; padding: 30px 20px; }
+        
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .header h2 { font-size: 24px; font-weight: 700; color: #111827; display: flex; align-items: center; gap: 10px; margin: 0; }
+        .header-actions { display: flex; gap: 12px; }
+        
+        .btn-outline {
+            background: white; border: 1px solid var(--border); color: #374151;
+            padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 500; text-decoration: none; display: inline-block;
+        }
+        .btn-outline:hover { background: #F9FAFB; }
+        
+        .btn-danger { background: #FEE2E2; color: #DC2626; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; }
+        .btn-danger:hover { background: #FECACA; }
+
+        /* FORM CARD */
+        .card { background: white; border-radius: var(--radius); box-shadow: var(--shadow); padding: 24px; margin-bottom: 24px; border: 1px solid var(--border); }
+        .card-header { font-size: 18px; font-weight: 600; margin-bottom: 20px; color: #374151; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+        
+        .form-actions { display: flex; gap: 12px; margin-top: 20px; justify-content: flex-end; }
+        .btn-secondary { background: #E5E7EB; color: #374151; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 500; cursor: pointer; }
+
+        /* SEARCH BAR */
+        .search-wrapper { position: relative; margin-bottom: 20px; }
+        .search-input {
+            width: 100%; padding: 14px 20px 14px 45px; border-radius: 50px;
+            border: 1px solid var(--border); background: white;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05); font-size: 15px; outline: none;
+        }
+        .search-icon { position: absolute; left: 18px; top: 50%; transform: translateY(-50%); color: #9CA3AF; }
+
+        /* TABLE STYLE (Glassmorphism Header) */
+        .table-container { background: white; border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; border: 1px solid var(--border); }
+        table { width: 100%; border-collapse: collapse; }
+        
+        thead th {
+            background: rgba(249, 250, 251, 0.95); backdrop-filter: blur(8px);
+            text-align: left; padding: 16px; font-size: 12px; text-transform: uppercase;
+            color: #6B7280; font-weight: 600; border-bottom: 1px solid var(--border);
+        }
+        
+        tbody td { padding: 16px; border-bottom: 1px solid #F3F4F6; color: #1F2937; vertical-align: middle; }
+        tbody tr:hover { background: #F9FAFB; }
+        
+        .thumb-admin { width: 200px; height: 200px; border-radius: 8px; object-fit: cover; border: 1px solid #eee; }
+        
+        .badge {
+            display: inline-block; padding: 4px 10px; border-radius: 20px;
+            font-size: 12px; font-weight: 600;
+        }
+        .bg-green { background: #ECFDF5; color: #059669; }
+        .bg-red { background: #FEF2F2; color: #DC2626; }
+        
+        /* Action buttons in table */
+        .action-btn { border: none; background: none; cursor: pointer; padding: 6px; border-radius: 6px; transition: 0.2s; }
+        .icon-edit { color: var(--warning); background: #FFFBEB; }
+        .icon-trash { color: var(--danger); background: #FEF2F2; margin-left: 6px; }
+        .action-btn:hover { transform: scale(1.1); }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            #adminPanel { padding: 15px; }
+            .form-grid { grid-template-columns: 1fr; }
+            th, td { font-size: 13px; padding: 10px; }
+            .thumb-admin { width: 40px; height: 40px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="login-wrapper" id="loginForm">
+        <div class="login-card">
+            <div style="font-size: 40px; margin-bottom: 10px;">🔐</div>
+            <h2 class="login-title">Admin Portal</h2>
+            <p class="login-sub">Đăng nhập để quản lý kho hàng</p>
+            
+            <div class="input-group">
+                <input type="email" id="email" class="modern-input" placeholder="Email quản trị...">
+            </div>
+            <div class="input-group">
+                <input type="password" id="password" class="modern-input" placeholder="Mật khẩu...">
+            </div>
+            
+            <button onclick="handleLogin()" class="btn-primary">Đăng Nhập</button>
+            <p id="msg" style="color:red; margin-top:10px; font-size:13px; min-height: 20px;"></p>
+            
+            <a href="index.html" class="link-home">← Quay lại trang chủ</a>
+        </div>
+    </div>
+
+    <div id="adminPanel">
+        <div class="header">
+            <h2>📦 Quản Lý Sản Phẩm</h2>
+            <div class="header-actions">
+                <a href="index.html" class="btn-outline">Xem Web</a>
+                <button onclick="handleLogout()" class="btn-danger">Đăng xuất</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">📝 Thông tin sản phẩm</div>
+            
+            <input type="hidden" id="inp-id">
+            <div class="form-grid">
+                <input id="inp-barcode" class="modern-input" placeholder="Mã vạch (Barcode)">
+                <input id="inp-loai" class="modern-input" placeholder="Loại tủ (VD: Tủ Nhựa)">
+                <input id="inp-ten" class="modern-input" placeholder="Tên mẫu (VD: Màu Xanh)">
+                <input id="inp-ton" type="number" class="modern-input" placeholder="Số lượng tồn">
+                <input id="inp-hinh" class="modern-input" placeholder="Tên file ảnh (VD: tu1.jpg)">
+            </div>
+            
+            <div class="form-actions">
+                <button class="btn-secondary" onclick="resetForm()">Hủy bỏ</button>
+                <button class="btn-primary" style="width: auto; padding: 10px 30px;" onclick="saveData()">💾 Lưu Dữ Liệu</button>
+            </div>
+        </div>
+
+        <div class="search-wrapper">
+            <span class="search-icon">🔍</span>
+            <input type="text" class="search-input" placeholder="Tìm kiếm nhanh sản phẩm..." oninput="searchData(this.value)">
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th width="80">Hình ảnh</th>
+                        <th>Barcode</th>
+                        <th>Tên Mẫu / Loại</th>
+                        <th>Tồn Kho</th>
+                        <th width="100" style="text-align:center">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody id="table-body">
+                    </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // --- CONFIG ---
+        const SUPABASE_URL = 'https://gpmuckoydhrokpioltem.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdwbXVja295ZGhyb2twaW9sdGVtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU3MTMzNTcsImV4cCI6MjA4MTI4OTM1N30.Fqe5U2hm_fERI6ZLc_FQ1SMh5F4sYOrxr8JqLlwLKI0';
+        const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let inventoryList = [];
+
+        // --- AUTH ---
+        async function checkSession() {
+            const { data: { session } } = await db.auth.getSession();
+            if (session) { showAdminPanel(); loadData(); }
+        }
+        checkSession();
+
+        async function handleLogin() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const msg = document.getElementById('msg');
+            msg.innerText = "Đang xử lý...";
+
+            const { error } = await db.auth.signInWithPassword({ email, password });
+            if (error) msg.innerText = "❌ Sai email hoặc mật khẩu";
+            else { showAdminPanel(); loadData(); msg.innerText = ""; }
+        }
+
+        async function handleLogout() {
+            await db.auth.signOut();
+            location.reload();
+        }
+
+        function showAdminPanel() {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('adminPanel').style.display = 'block';
+        }
+
+        // --- CRUD LOGIC ---
+        async function loadData() {
+            const tbody = document.getElementById('table-body');
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px; color:#6B7280">⏳ Đang tải dữ liệu...</td></tr>';
+
+            let { data, error } = await db.from('inventory').select('*').order('id', { ascending: false });
+            if (!error) {
+                inventoryList = data;
+                renderTable(data);
+            }
+        }
+
+        function renderTable(data) {
+            const tbody = document.getElementById('table-body');
+            tbody.innerHTML = '';
+            
+            data.forEach(item => {
+                let img = item.hinh ? `<img src="images/${item.hinh}" class="thumb-admin">` : '<span style="font-size:12px; color:#ccc">No Img</span>';
+                let badgeClass = item.ton_kho > 0 ? 'bg-green' : 'bg-red';
+                let badgeText = item.ton_kho > 0 ? 'Sẵn hàng' : 'Hết hàng';
+
+                let row = `
+                    <tr>
+                        <td>${img}</td>
+                        <td style="font-size:25px; font-family:monospace; font-weight:600; color:#374151">${item.barcode}</td>
+                        <td>
+							<div style="font-size:25px; color:#6B7280">${item.loai_tu || 'Chưa phân loại'}</div>
+                            <div style="font-weight:600; color:#111827">Mẫu tủ: ${item.ten_mau}</div>
+                        </td>
+                        <td>
+                            <span style="font-size:25px; font-weight:bold; margin-right:5px">${item.ton_kho}</span>
+                            <span class="badge ${badgeClass}">${badgeText}</span>
+                        </td>
+                        <td style="text-align:center">
+                            <button class="action-btn icon-edit" onclick="editItem(${item.id})" title="Sửa">✏️</button>
+                            <button class="action-btn icon-trash" onclick="deleteItem(${item.id})" title="Xóa">🗑️</button>
+                        </td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+        }
+
+        function searchData(keyword) {
+            keyword = keyword.toLowerCase();
+            const filtered = inventoryList.filter(i => 
+                (i.barcode + i.ten_mau + i.loai_tu).toLowerCase().includes(keyword)
+            );
+            renderTable(filtered);
+        }
+
+        async function saveData() {
+            const id = document.getElementById('inp-id').value;
+            const payload = {
+                barcode: document.getElementById('inp-barcode').value.trim(),
+                loai_tu: document.getElementById('inp-loai').value.trim(),
+                ten_mau: document.getElementById('inp-ten').value.trim(),
+                ton_kho: parseInt(document.getElementById('inp-ton').value) || 0,
+                hinh: document.getElementById('inp-hinh').value.trim()
+            };
+
+            if (!payload.barcode || !payload.ten_mau) return alert("Vui lòng điền Barcode và Tên mẫu");
+
+            const task = id 
+                ? db.from('inventory').update(payload).eq('id', id)
+                : db.from('inventory').insert([payload]);
+
+            const { error } = await task;
+            
+            if (error) alert("Lỗi: " + error.message);
+            else {
+                alert(id ? "Đã cập nhật!" : "Đã thêm mới!");
+                resetForm();
+                loadData();
+            }
+        }
+
+        function editItem(id) {
+            const item = inventoryList.find(i => i.id === id);
+            document.getElementById('inp-id').value = item.id;
+            document.getElementById('inp-barcode').value = item.barcode;
+            document.getElementById('inp-loai').value = item.loai_tu;
+            document.getElementById('inp-ten').value = item.ten_mau;
+            document.getElementById('inp-ton').value = item.ton_kho;
+            document.getElementById('inp-hinh').value = item.hinh;
+            
+            // Cuộn lên form và focus vào ô đầu tiên
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            document.getElementById('inp-barcode').focus();
+        }
+
+        async function deleteItem(id) {
+            if(confirm("Bạn có chắc chắn muốn xóa sản phẩm này không?")) {
+                await db.from('inventory').delete().eq('id', id);
+                loadData();
+            }
+        }
+
+        function resetForm() {
+            document.querySelectorAll('.form-grid input').forEach(i => i.value = '');
+            document.getElementById('inp-id').value = '';
+        }
+    </script>
+</body>
+</html>
