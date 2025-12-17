@@ -2,205 +2,229 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quản Trị Hệ Thống</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Quản Trị Kho Hàng</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
-        /* --- 1. GLOBAL VARIABLES (Đồng bộ với Index) --- */
+        /* --- 1. GLOBAL VARIABLES & RESET --- */
         :root {
             --primary: #4F46E5;
             --primary-hover: #4338ca;
             --danger: #EF4444;
-            --warning: #F59E0B;
             --bg-body: #F3F4F6;
-            --bg-card: #ffffff;
-            --text-main: #111827;
-            --text-sub: #6B7280;
             --border: #E5E7EB;
-            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            --radius: 12px;
+            --radius: 16px;
+            --btn-radius: 30px;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
 
         body { 
             font-family: 'Inter', sans-serif; 
             background-color: var(--bg-body); 
-            color: var(--text-main); 
-            margin: 0; padding: 0;
+            color: #111827; margin: 0; padding: 0;
             -webkit-font-smoothing: antialiased;
         }
+        * { box-sizing: border-box; }
 
-        /* --- 2. LOGIN PAGE STYLE --- */
-        .login-wrapper {
-            min-height: 100vh;
-            display: flex; align-items: center; justify-content: center;
-            background: linear-gradient(135deg, #E0E7FF 0%, #F3F4F6 100%);
-        }
-        .login-card {
-            background: white; padding: 40px; border-radius: 16px;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-            width: 100%; max-width: 360px; text-align: center;
-        }
-        .login-title { font-size: 24px; font-weight: 700; margin-bottom: 8px; color: #1F2937; }
-        .login-sub { color: #6B7280; margin-bottom: 24px; font-size: 14px; }
-        
-        .input-group { margin-bottom: 16px; text-align: left; }
+        /* --- 2. COMPONENTS --- */
         .modern-input {
             width: 100%; padding: 12px 16px; border: 1px solid var(--border);
-            border-radius: 8px; font-size: 15px; outline: none; box-sizing: border-box;
-            transition: all 0.2s;
+            border-radius: 12px; font-size: 15px; outline: none; transition: all 0.2s; margin-bottom: 12px;
         }
         .modern-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
         
-        .btn-primary {
-            width: 100%; background: var(--primary); color: white; border: none;
-            padding: 12px; border-radius: 8px; font-weight: 600; cursor: pointer;
-            transition: background 0.2s; font-size: 15px;
+        .btn {
+            padding: 10px 20px; border-radius: var(--btn-radius); font-weight: 600; 
+            cursor: pointer; border: none; text-decoration: none; 
+            display: inline-flex; align-items: center; justify-content: center;
+            transition: all 0.2s; font-size: 14px;
         }
+        .btn-primary { background: var(--primary); color: white; width: 100%; padding: 12px; font-size: 16px; }
         .btn-primary:hover { background: var(--primary-hover); }
-
-        .link-home { margin-top: 20px; display: block; color: var(--text-sub); text-decoration: none; font-size: 13px; }
-        .link-home:hover { color: var(--primary); }
-
-        /* --- 3. DASHBOARD STYLE --- */
-        #adminPanel { display: none; max-width: 1200px; margin: 0 auto; padding: 30px 20px; }
         
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
-        .header h2 { font-size: 24px; font-weight: 700; color: #111827; display: flex; align-items: center; gap: 10px; margin: 0; }
-        .header-actions { display: flex; gap: 12px; }
-        
-        .btn-outline {
-            background: white; border: 1px solid var(--border); color: #374151;
-            padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 500; text-decoration: none; display: inline-block;
+        .btn-outline { background: white; border: 1px solid var(--border); color: #374151; }
+        .btn-danger { background: #FEE2E2; color: #DC2626; }
+        .btn-secondary { background: #E5E7EB; color: #374151; }
+        .btn-outline:hover, .btn-secondary:hover { background: #F9FAFB; }
+        .btn-danger:hover { background: #FCA5A5; }
+
+        .card { background: white; border-radius: var(--radius); box-shadow: var(--shadow); padding: 24px; margin-bottom: 20px; }
+
+        /* --- 3. LOGIN PAGE --- */
+        .login-wrapper {
+            min-height: 100vh; display: flex; align-items: center; justify-content: center;
+            background: linear-gradient(135deg, #E0E7FF 0%, #F3F4F6 100%); padding: 20px;
         }
-        .btn-outline:hover { background: #F9FAFB; }
-        
-        .btn-danger { background: #FEE2E2; color: #DC2626; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; }
-        .btn-danger:hover { background: #FECACA; }
+        .login-card { width: 100%; max-width: 360px; text-align: center; padding: 40px; }
 
-        /* FORM CARD */
-        .card { background: white; border-radius: var(--radius); box-shadow: var(--shadow); padding: 24px; margin-bottom: 24px; border: 1px solid var(--border); }
-        .card-header { font-size: 18px; font-weight: 600; margin-bottom: 20px; color: #374151; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        /* --- 4. DASHBOARD LAYOUT --- */
+        #adminPanel { display: none; max-width: 1100px; margin: 0 auto; padding: 30px 20px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .header h2 { font-size: 24px; font-weight: 700; margin: 0; display: flex; align-items: center; gap: 10px;}
+        .header-actions { display: flex; gap: 10px; }
         
-        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
-        
-        .form-actions { display: flex; gap: 12px; margin-top: 20px; justify-content: flex-end; }
-        .btn-secondary { background: #E5E7EB; color: #374151; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 500; cursor: pointer; }
+        /* Form & Stats */
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; }
+        .form-actions { display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end; }
 
-        /* SEARCH BAR */
+        /* [NEW] STATS CARD CSS */
+        .stats-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;
+        }
+        .stat-card {
+            background: white; padding: 20px; border-radius: var(--radius);
+            box-shadow: var(--shadow); display: flex; flex-direction: column; align-items: flex-start;
+            border: 1px solid var(--border);
+        }
+        .stat-label { color: #6B7280; font-size: 13px; font-weight: 500; text-transform: uppercase; margin-bottom: 5px; }
+        .stat-value { font-size: 28px; font-weight: 800; color: #111827; }
+        .text-red { color: #DC2626; }
+
+        /* Search */
         .search-wrapper { position: relative; margin-bottom: 20px; }
-        .search-input {
-            width: 100%; padding: 14px 20px 14px 45px; border-radius: 50px;
-            border: 1px solid var(--border); background: white;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05); font-size: 15px; outline: none;
-        }
-        .search-icon { position: absolute; left: 18px; top: 50%; transform: translateY(-50%); color: #9CA3AF; }
+        .search-input { width: 100%; padding: 14px 20px 14px 45px; border-radius: 50px; border: 1px solid var(--border); outline: none; font-size: 15px; background: white; box-shadow: var(--shadow);}
+        .search-icon { position: absolute; left: 18px; top: 50%; transform: translateY(-50%); color: #9CA3AF; font-size: 18px;}
 
-        /* TABLE STYLE (Glassmorphism Header) */
+        /* Table Styling */
         .table-container { background: white; border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; border: 1px solid var(--border); }
         table { width: 100%; border-collapse: collapse; }
+        thead th { background: #F9FAFB; padding: 16px; text-align: left; font-size: 12px; text-transform: uppercase; color: #6B7280; border-bottom: 1px solid var(--border); font-weight: 600; }
+        tbody td { padding: 16px; border-bottom: 1px solid #F3F4F6; vertical-align: middle; }
         
-        thead th {
-            background: rgba(249, 250, 251, 0.95); backdrop-filter: blur(8px);
-            text-align: left; padding: 16px; font-size: 12px; text-transform: uppercase;
-            color: #6B7280; font-weight: 600; border-bottom: 1px solid var(--border);
-        }
+        .thumb-admin { width: 200px; height: 200px; border-radius: 12px; object-fit: cover; border: 1px solid #eee; background: #f9f9f9; }
+        .badge { display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+        .bg-green { background: #D1FAE5; color: #065F46; }
+        .bg-red { background: #FEE2E2; color: #991B1B; }
         
-        tbody td { padding: 16px; border-bottom: 1px solid #F3F4F6; color: #1F2937; vertical-align: middle; }
-        tbody tr:hover { background: #F9FAFB; }
-        
-        .thumb-admin { width: 200px; height: 200px; border-radius: 8px; object-fit: cover; border: 1px solid #eee; }
-        
-        .badge {
-            display: inline-block; padding: 4px 10px; border-radius: 20px;
-            font-size: 12px; font-weight: 600;
-        }
-        .bg-green { background: #ECFDF5; color: #059669; }
-        .bg-red { background: #FEF2F2; color: #DC2626; }
-        
-        /* Action buttons in table */
-        .action-btn { border: none; background: none; cursor: pointer; padding: 6px; border-radius: 6px; transition: 0.2s; }
-        .icon-edit { color: var(--warning); background: #FFFBEB; }
-        .icon-trash { color: var(--danger); background: #FEF2F2; margin-left: 6px; }
+        .action-btn { border: none; background: none; cursor: pointer; padding: 8px; border-radius: 50%; transition: 0.2s; font-size: 16px; display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px;}
+        .icon-edit { background: #FFFBEB; color: #B45309; }
+        .icon-trash { background: #FEF2F2; color: #DC2626; margin-left: 5px; }
         .action-btn:hover { transform: scale(1.1); }
 
-        /* Responsive */
+        .pc-barcode { font-family: monospace; font-weight: 600; color: var(--primary); background: #EEF2FF; padding: 4px 8px; border-radius: 6px; font-size: 25px; }
+        .item-name { font-weight: 600; color: #111827; font-size: 25px; margin-bottom: 4px; }
+        .item-cat { color: #6B7280; font-size: 13px; }
+        .stock-num { font-weight: 700; font-size: 18px; margin-right: 8px; }
+        .mobile-only { display: none; }
+
+        /* --- 5. MOBILE RESPONSIVE --- */
         @media (max-width: 768px) {
-            #adminPanel { padding: 15px; }
-            .form-grid { grid-template-columns: 1fr; }
-            th, td { font-size: 13px; padding: 10px; }
-            .thumb-admin { width: 40px; height: 40px; }
+            #adminPanel { padding: 20px 15px; }
+            .header { flex-direction: column; align-items: flex-start; gap: 15px; }
+            .header-actions { width: 100%; }
+            .header-actions .btn { flex: 1; }
+            
+            .card { padding: 15px; }
+            .form-grid { grid-template-columns: 1fr; gap: 10px; }
+            .form-actions .btn { flex: 1; padding: 12px; }
+
+            /* Stats on mobile */
+            .stat-value { font-size: 24px; }
+
+            table, thead, tbody, th, td, tr { display: block; }
+            thead { display: none; }
+            .pc-only-cell { display: none; }
+            .mobile-only { display: inline-block; }
+
+            tbody tr {
+                display: grid;
+                //grid-template-columns: 80px 1fr;
+                grid-template-rows: auto auto; 
+                gap: 10px 15px;
+                background: white; padding: 15px; border-radius: var(--radius);
+                box-shadow: var(--shadow); margin-bottom: 15px; border: 1px solid var(--border);
+                position: relative;
+            }
+
+            tbody td { padding: 0; border: none; }
+            tbody td:nth-child(1) { grid-row: 1 / 3; grid-column: 1 / 2; }
+            .thumb-admin { width: 150px; height: 150px; }
+
+            tbody td:nth-child(3) { grid-row: 1; grid-column: 2 / 3; align-self: start; }
+            tbody td:nth-child(4) { 
+                grid-row: 2; grid-column: 2 / 3; align-self: end;
+                display: flex; align-items: center; justify-content: space-between;
+                padding-top: 5px;
+            }
+            tbody td:nth-child(5) { position: absolute; top: 10px; right: 10px; display: flex; gap: 5px; }
+            
+            .item-name { font-size: 16px; margin-bottom: 6px; padding-right: 70px; }
+            .mobile-barcode { font-family: monospace; font-size: 13px; color: #6B7280; background: #F3F4F6; padding: 2px 6px; border-radius: 4px; }
         }
     </style>
 </head>
 <body>
 
     <div class="login-wrapper" id="loginForm">
-        <div class="login-card">
-            <div style="font-size: 40px; margin-bottom: 10px;">🔐</div>
-            <h2 class="login-title">Admin Portal</h2>
-            <p class="login-sub">Đăng nhập để quản lý kho hàng</p>
-            
-            <div class="input-group">
-                <input type="email" id="email" class="modern-input" placeholder="Email quản trị...">
-            </div>
-            <div class="input-group">
-                <input type="password" id="password" class="modern-input" placeholder="Mật khẩu...">
-            </div>
-            
-            <button onclick="handleLogin()" class="btn-primary">Đăng Nhập</button>
-            <p id="msg" style="color:red; margin-top:10px; font-size:13px; min-height: 20px;"></p>
-            
-            <a href="index.html" class="link-home">← Quay lại trang chủ</a>
+        <div class="card login-card">
+            <div style="font-size: 40px; margin-bottom: 15px;">🔐</div>
+            <h2 style="margin: 0 0 10px 0; font-size: 24px;">Admin Portal</h2>
+            <p style="color:#6B7280; margin-bottom:25px">Đăng nhập để quản lý</p>
+            <input type="email" id="email" class="modern-input" placeholder="Email quản trị...">
+            <input type="password" id="password" class="modern-input" placeholder="Mật khẩu...">
+            <button onclick="handleLogin()" class="btn btn-primary">Đăng Nhập</button>
+            <p id="msg" style="color:red; margin-top:15px; font-size:14px; min-height: 20px;"></p>
+            <a href="index.html" style="margin-top:10px; display:block; color:#6B7280; text-decoration:none; font-size:14px">← Về trang chủ</a>
         </div>
     </div>
 
     <div id="adminPanel">
         <div class="header">
-            <h2>📦 Quản Lý Sản Phẩm</h2>
+            <h2>📦 Kho Hàng</h2>
             <div class="header-actions">
-                <a href="index.html" class="btn-outline">Xem Web</a>
-                <button onclick="handleLogout()" class="btn-danger">Đăng xuất</button>
+                <a href="index.html" class="btn btn-outline">Xem Web</a>
+                <button onclick="handleLogout()" class="btn btn-danger">Đăng xuất</button>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Tổng mẫu mã</div>
+                <div class="stat-value" id="stat-total">...</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Cần nhập hàng</div>
+                <div class="stat-value text-red" id="stat-out">...</div>
             </div>
         </div>
 
         <div class="card">
-            <div class="card-header">📝 Thông tin sản phẩm</div>
-            
+            <div style="font-size:18px; font-weight:600; margin-bottom:20px; color:#374151; display:flex; align-items:center; gap:8px">
+                📝 Thông tin sản phẩm
+            </div>
             <input type="hidden" id="inp-id">
             <div class="form-grid">
                 <input id="inp-barcode" class="modern-input" placeholder="Mã vạch (Barcode)">
-                <input id="inp-loai" class="modern-input" placeholder="Loại tủ (VD: Tủ Nhựa)">
+                <input id="inp-loai" class="modern-input" placeholder="Loại (VD: Tủ Nhựa)">
                 <input id="inp-ten" class="modern-input" placeholder="Tên mẫu (VD: Màu Xanh)">
                 <input id="inp-ton" type="number" class="modern-input" placeholder="Số lượng tồn">
                 <input id="inp-hinh" class="modern-input" placeholder="Tên file ảnh (VD: tu1.jpg)">
             </div>
-            
             <div class="form-actions">
-                <button class="btn-secondary" onclick="resetForm()">Hủy bỏ</button>
-                <button class="btn-primary" style="width: auto; padding: 10px 30px;" onclick="saveData()">💾 Lưu Dữ Liệu</button>
+                <button class="btn btn-secondary" onclick="resetForm()">Hủy bỏ</button>
+                <button class="btn btn-primary" style="width:auto; padding-left:30px; padding-right:30px" onclick="saveData()">💾 Lưu Dữ Liệu</button>
             </div>
         </div>
 
         <div class="search-wrapper">
             <span class="search-icon">🔍</span>
-            <input type="text" class="search-input" placeholder="Tìm kiếm nhanh sản phẩm..." oninput="searchData(this.value)">
+            <input type="text" class="search-input" placeholder="Tìm kiếm tên hoặc barcode..." oninput="searchData(this.value)">
         </div>
 
         <div class="table-container">
             <table>
                 <thead>
                     <tr>
-                        <th width="80">Hình ảnh</th>
-                        <th>Barcode</th>
-                        <th>Tên Mẫu / Loại</th>
-                        <th>Tồn Kho</th>
+                        <th width="90">Hình ảnh</th>
+                        <th class="pc-only-cell" width="120">Barcode</th>
+                        <th>Thông tin chi tiết</th>
+                        <th width="150">Tồn Kho</th>
                         <th width="100" style="text-align:center">Thao tác</th>
                     </tr>
                 </thead>
-                <tbody id="table-body">
-                    </tbody>
+                <tbody id="table-body"></tbody>
             </table>
         </div>
     </div>
@@ -210,7 +234,6 @@
         const SUPABASE_URL = 'https://gpmuckoydhrokpioltem.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdwbXVja295ZGhyb2twaW9sdGVtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU3MTMzNTcsImV4cCI6MjA4MTI4OTM1N30.Fqe5U2hm_fERI6ZLc_FQ1SMh5F4sYOrxr8JqLlwLKI0';
         const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
         let inventoryList = [];
 
         // --- AUTH ---
@@ -220,101 +243,164 @@
         }
         checkSession();
 
+        // Bắt phím Enter
+        ['email', 'password'].forEach(id => {
+            document.getElementById(id).addEventListener("keypress", e => {
+                if (e.key === "Enter") { e.preventDefault(); handleLogin(); }
+            });
+        });
+
+        // --- UTILS: HÀM KHÓA NÚT (MỚI) ---
+        function setLoading(btnId, isLoading, text = "Lưu Dữ Liệu") {
+            const btn = document.getElementById(btnId);
+            if (isLoading) {
+                btn.disabled = true;
+                btn.innerHTML = `⏳ Đang xử lý...`;
+                btn.style.opacity = "0.7";
+            } else {
+                btn.disabled = false;
+                btn.innerHTML = text;
+                btn.style.opacity = "1";
+            }
+        }
+
         async function handleLogin() {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             const msg = document.getElementById('msg');
-            msg.innerText = "Đang xử lý...";
+            const btnLogin = document.querySelector('.login-card button'); // Lấy nút đăng nhập
+
+            if(!email || !password) { msg.innerText = "⚠️ Vui lòng điền đủ thông tin"; return; }
+
+            // Hiệu ứng loading nút đăng nhập
+            btnLogin.disabled = true;
+            btnLogin.innerText = "Đang kiểm tra...";
+            msg.innerText = "";
 
             const { error } = await db.auth.signInWithPassword({ email, password });
-            if (error) msg.innerText = "❌ Sai email hoặc mật khẩu";
-            else { showAdminPanel(); loadData(); msg.innerText = ""; }
+            
+            if (error) {
+                msg.innerText = "❌ Email hoặc mật khẩu không đúng";
+                btnLogin.disabled = false;
+                btnLogin.innerText = "Đăng Nhập";
+            } else { 
+                showAdminPanel(); 
+                loadData(); 
+            }
         }
 
-        async function handleLogout() {
-            await db.auth.signOut();
-            location.reload();
+        async function handleLogout() { await db.auth.signOut(); location.reload(); }
+        function showAdminPanel() { document.getElementById('loginForm').style.display = 'none'; document.getElementById('adminPanel').style.display = 'block'; }
+
+        function updateStats(data) {
+            document.getElementById('stat-total').innerText = data.length;
+            const outOfStock = data.filter(item => item.ton_kho <= 0).length;
+            document.getElementById('stat-out').innerText = outOfStock;
         }
 
-        function showAdminPanel() {
-            document.getElementById('loginForm').style.display = 'none';
-            document.getElementById('adminPanel').style.display = 'block';
-        }
-
-        // --- CRUD LOGIC ---
         async function loadData() {
             const tbody = document.getElementById('table-body');
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px; color:#6B7280">⏳ Đang tải dữ liệu...</td></tr>';
-
+            // Giữ lại khung nhưng hiện loading
+            if(inventoryList.length === 0) tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:30px; color:#6B7280">⏳ Đang tải dữ liệu...</td></tr>';
+            
             let { data, error } = await db.from('inventory').select('*').order('id', { ascending: false });
-            if (!error) {
-                inventoryList = data;
-                renderTable(data);
+            
+            if (!error) { 
+                inventoryList = data; 
+                updateStats(data);
+                renderTable(data); 
             }
         }
 
         function renderTable(data) {
             const tbody = document.getElementById('table-body');
             tbody.innerHTML = '';
-            
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:30px; color:#6B7280">Chưa có dữ liệu.</td></tr>';
+                return;
+            }
             data.forEach(item => {
-                let img = item.hinh ? `<img src="images/${item.hinh}" class="thumb-admin">` : '<span style="font-size:12px; color:#ccc">No Img</span>';
+                let imgHtml = item.hinh ? 
+                    `<img src="images/${item.hinh}" class="thumb-admin" onerror="this.onerror=null;this.src='https://placehold.co/70x70?text=No+Img';">` : 
+                    `<img src="https://placehold.co/70x70?text=No+Img" class="thumb-admin">`;
+                
                 let badgeClass = item.ton_kho > 0 ? 'bg-green' : 'bg-red';
+                let badgeIcon = item.ton_kho > 0 ? '✅' : '⚠️';
                 let badgeText = item.ton_kho > 0 ? 'Sẵn hàng' : 'Hết hàng';
 
                 let row = `
-                    <tr>
-                        <td>${img}</td>
-                        <td style="font-size:25px; font-family:monospace; font-weight:600; color:#374151">${item.barcode}</td>
-                        <td>
-							<div style="font-size:25px; color:#6B7280">${item.loai_tu || 'Chưa phân loại'}</div>
-                            <div style="font-weight:600; color:#111827">Mẫu tủ: ${item.ten_mau}</div>
-                        </td>
-                        <td>
-                            <span style="font-size:25px; font-weight:bold; margin-right:5px">${item.ton_kho}</span>
-                            <span class="badge ${badgeClass}">${badgeText}</span>
-                        </td>
-                        <td style="text-align:center">
-                            <button class="action-btn icon-edit" onclick="editItem(${item.id})" title="Sửa">✏️</button>
-                            <button class="action-btn icon-trash" onclick="deleteItem(${item.id})" title="Xóa">🗑️</button>
-                        </td>
-                    </tr>
-                `;
+					<tr>
+						<td>${imgHtml}</td>
+						<td class="pc-only-cell"><span class="pc-barcode">${item.barcode}</span></td>
+						<td>
+							<div class="item-name">${item.ten_mau}</div>
+							<div class="item-cat" style="display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; background: #F3F4F6; color: #4B5563; border: 1px solid #E5E7EB;">${item.loai_tu || '-'}</div>
+							<div class="mobile-only mobile-barcode">${item.barcode}</div>
+						</td>
+						<td>
+							<div style="display:flex; align-items:center;">
+								<span class="stock-num">
+									<span class="mobile-only" style="font-weight:normal; font-size: 0.9em; color: #666;">Tồn kho: </span> ${item.ton_kho}
+								</span>
+								<span class="badge ${badgeClass}">
+									<span class="mobile-only" style="margin-right:4px">${badgeIcon}</span>${badgeText}
+								</span>
+							</div>
+						</td>
+						<td style="text-align:center">
+							<button class="action-btn icon-edit" onclick="editItem(${item.id})">✏️</button>
+							<button class="action-btn icon-trash" onclick="deleteItem(${item.id})">🗑️</button>
+						</td>
+					</tr>
+				`;
                 tbody.innerHTML += row;
             });
         }
 
         function searchData(keyword) {
             keyword = keyword.toLowerCase();
-            const filtered = inventoryList.filter(i => 
-                (i.barcode + i.ten_mau + i.loai_tu).toLowerCase().includes(keyword)
-            );
+            const filtered = inventoryList.filter(i => (i.barcode + i.ten_mau + i.loai_tu).toLowerCase().includes(keyword));
             renderTable(filtered);
         }
 
         async function saveData() {
             const id = document.getElementById('inp-id').value;
+            const barcode = document.getElementById('inp-barcode').value.trim();
+            const ten_mau = document.getElementById('inp-ten').value.trim();
+            const ton_kho = parseInt(document.getElementById('inp-ton').value);
+            
+            // 1. Validate kỹ hơn
+            if (!barcode || !ten_mau) return alert("❌ Vui lòng nhập Barcode và Tên mẫu!");
+            if (isNaN(ton_kho) || ton_kho < 0) return alert("❌ Số lượng tồn kho không hợp lệ (phải >= 0)!");
+
             const payload = {
-                barcode: document.getElementById('inp-barcode').value.trim(),
+                barcode: barcode,
                 loai_tu: document.getElementById('inp-loai').value.trim(),
-                ten_mau: document.getElementById('inp-ten').value.trim(),
-                ton_kho: parseInt(document.getElementById('inp-ton').value) || 0,
+                ten_mau: ten_mau,
+                ton_kho: ton_kho,
                 hinh: document.getElementById('inp-hinh').value.trim()
             };
 
-            if (!payload.barcode || !payload.ten_mau) return alert("Vui lòng điền Barcode và Tên mẫu");
+            // 2. Hiệu ứng Loading cho nút Lưu (ID nút lưu cần thêm id="btn-save")
+            // Lưu ý: Bạn cần thêm id="btn-save" vào nút Lưu trong HTML ở trên
+            const saveBtn = document.querySelector('.form-actions .btn-primary');
+            const originalText = id ? "💾 Cập Nhật" : "💾 Lưu Dữ Liệu";
+            
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = "⏳ Đang lưu...";
 
-            const task = id 
-                ? db.from('inventory').update(payload).eq('id', id)
-                : db.from('inventory').insert([payload]);
-
+            const task = id ? db.from('inventory').update(payload).eq('id', id) : db.from('inventory').insert([payload]);
             const { error } = await task;
             
+            // Trả lại trạng thái nút
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = originalText;
+
             if (error) alert("Lỗi: " + error.message);
-            else {
-                alert(id ? "Đã cập nhật!" : "Đã thêm mới!");
-                resetForm();
-                loadData();
+            else { 
+                // alert(id ? "Đã cập nhật!" : "Đã thêm mới!"); // Có thể bỏ alert nếu muốn mượt hơn
+                resetForm(); 
+                loadData(); 
             }
         }
 
@@ -326,14 +412,16 @@
             document.getElementById('inp-ten').value = item.ten_mau;
             document.getElementById('inp-ton').value = item.ton_kho;
             document.getElementById('inp-hinh').value = item.hinh;
-            
-            // Cuộn lên form và focus vào ô đầu tiên
             window.scrollTo({ top: 0, behavior: 'smooth' });
             document.getElementById('inp-barcode').focus();
         }
 
         async function deleteItem(id) {
-            if(confirm("Bạn có chắc chắn muốn xóa sản phẩm này không?")) {
+            if(confirm("Bạn chắc chắn muốn xóa sản phẩm này? Hành động này không thể hoàn tác.")) {
+                // Hiệu ứng nhỏ để người dùng biết đang xóa
+                const row = document.querySelector(`button[onclick="deleteItem(${id})"]`).closest('tr');
+                row.style.opacity = "0.3";
+                
                 await db.from('inventory').delete().eq('id', id);
                 loadData();
             }
@@ -342,6 +430,8 @@
         function resetForm() {
             document.querySelectorAll('.form-grid input').forEach(i => i.value = '');
             document.getElementById('inp-id').value = '';
+            // Reset nút về trạng thái thêm mới
+            document.querySelector('.form-actions .btn-primary').innerHTML = "💾 Lưu Dữ Liệu";
         }
     </script>
 </body>

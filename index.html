@@ -65,7 +65,7 @@
         .bg-gray { background: #F3F4F6; color: #4B5563; border: 1px solid #E5E7EB; }
 
         /* Buttons */
-        .btn-buy { background: var(--primary); color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 500; cursor: pointer; }
+        .btn-buy { background: var(--primary); color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 500; cursor: pointer; border-radius: 30px; }
         .qty-wrapper { display: flex; align-items: center; border: 1px solid #D1D5DB; border-radius: 8px; overflow: hidden; background: white; }
         .qty-wrapper button { background: white; border: none; padding: 5px 12px; cursor: pointer; font-size: 16px; font-weight: bold; color: #374151; }
         .qty-input { width: 30px; text-align: center; border: none; font-weight: 600; outline: none; }
@@ -116,7 +116,7 @@
             .m-btn-buy { 
                 background: var(--primary); color: white; border: none; 
                 height: 36px; padding: 0 20px; border-radius: 6px; 
-                font-weight: 600; font-size: 14px;
+                font-weight: 600; font-size: 14px; border-radius: 30px;
             }
         }
     </style>
@@ -199,7 +199,7 @@
                             <td>
                                 <div style="display:flex; gap:10px; align-items:center;">
                                     <div class="qty-wrapper"><button onclick="upVal('${rowKey}',-1)">-</button><input id="qty_${rowKey}" class="qty-input" value="1"><button onclick="upVal('${rowKey}',1)">+</button></div>
-                                    <button class="btn-buy" onclick="buyItem('${item.barcode}', '${item.hinh}', '${rowKey}')">Xuất</button>
+                                    <button class="btn-buy" onclick="buyItem('${item.barcode}', '${item.hinh}', '${rowKey}')">Xuất hàng</button>
                                 </div>
                             </td>
                         </tr>`;
@@ -241,7 +241,7 @@
                                     <input id="qty_${key}" class="m-qty-inp" type="number" value="1" readonly>
                                     <button class="m-qty-btn" onclick="upVal('${key}', 1)">+</button>
                                 </div>
-                                <button class="m-btn-buy" onclick="buyItem('${item.barcode}', '${item.hinh}', '${key}')">Xuất</button>
+                                <button class="m-btn-buy" onclick="buyItem('${item.barcode}', '${item.hinh}', '${key}')">Xuất hàng</button>
                             </div>
                         </div>
                     </div>
