@@ -6,6 +6,10 @@
     <title>Kho Hàng Tủ</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
+	<!-- Thư viện Viewer.js để xem ảnh mượt mà như Zalo -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/viewerjs/1.11.6/viewer.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/viewerjs/1.11.6/viewer.min.js"></script>
+	
     <!-- Supabase, SweetAlert2 & HTML5-QRCode -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -186,11 +190,8 @@
         <div id="mobile-list" class="mobile-view"></div>
     </div>
 
-    <!-- Modal Phóng To Ảnh -->
-    <div id="imageModal" class="custom-modal" onclick="closeImage()">
-        <span class="close-modal" onclick="closeImage()">&times;</span>
-        <img id="modalImg" src="">
-    </div>
+    <!-- Ảnh gốc ẩn dành riêng cho Viewer.js -->
+    <img id="hidden-image-viewer" style="display: none;" src="">
 
     <!-- Modal Quét Mã Vạch -->
     <div id="scannerModal" class="custom-modal">
@@ -353,16 +354,85 @@
             }, 300);
         }
 
-        // --- XỬ LÝ ẢNH CHUNG ---
-        function viewImage(src, event) {
-            if (event) event.stopPropagation();
-            document.getElementById("modalImg").src = src;
-            document.getElementById("imageModal").style.display = "flex";
+        // --- XỬ LÝ ẢNH CHUNG (CĂN GIỮA CHUẨN MƯỢT) ---
+        let imageViewer = null;
+        let defaultRatio = 0;
+        let defaultX = 0;
+        let defaultY = 0;
+        let isClosing = false;
+
+        // Hàm bắt sự kiện nhả ngón tay
+        function snapToCenter(e) {
+            if (isClosing || !imageViewer || !imageViewer.imageData) return;
+
+            // TUYỆT CHIÊU: Chỉ giật ảnh về giữa NẾU ngón tay vừa chạm vào bức ảnh.
+            // Nếu chạm vào nút X hoặc phông nền -> KHÔNG giật, nhường đường cho lệnh Tắt ảnh.
+            if (e && e.target && e.target.tagName.toLowerCase() !== 'img') {
+                return;
+            }
+
+            // Kiểm tra nếu ảnh đang ở kích thước bình thường
+            if (imageViewer.imageData.ratio <= defaultRatio + 0.01) {
+                let currentX = imageViewer.imageData.x;
+                let currentY = imageViewer.imageData.y;
+                
+                // Trượt mượt mà về lại tọa độ trung tâm gốc
+                if (Math.abs(currentX - defaultX) > 1 || Math.abs(currentY - defaultY) > 1) {
+                    imageViewer.moveTo(defaultX, defaultY);
+                }
+            }
         }
 
-        function closeImage() {
-            document.getElementById("imageModal").style.display = "none";
-            document.getElementById("modalImg").src = ""; 
+        function viewImage(src, event) {
+            if (event) event.stopPropagation();
+            
+            const imgEl = document.getElementById("hidden-image-viewer");
+            imgEl.src = src;
+
+            if (imageViewer) {
+                imageViewer.destroy();
+            }
+
+            isClosing = false;
+
+            imageViewer = new Viewer(imgEl, {
+                toolbar: false,       
+                navbar: false,        
+                title: false,         
+                button: true,         
+                backdrop: true,       
+                transition: true,     
+                zoomRatio: 0.3,
+                
+                viewed: function () {
+                    // 1. Chặn thu nhỏ an toàn (Khắc phục hoàn toàn lỗi nút X)
+                    imageViewer.options.minZoomRatio = imageViewer.imageData.ratio;
+                    
+                    // 2. Ghi nhớ tọa độ
+                    defaultRatio = imageViewer.imageData.ratio;
+                    defaultX = imageViewer.imageData.x;
+                    defaultY = imageViewer.imageData.y;
+
+                    // 3. Lắng nghe lúc nhả tay để tự động bật về giữa
+                    imageViewer.viewer.addEventListener('touchend', snapToCenter);
+                    imageViewer.viewer.addEventListener('mouseup', snapToCenter);
+                },
+                
+                hide: function () {
+                    isClosing = true; // Bật cờ khóa giật ảnh
+                },
+                
+                hidden: function () {
+                    if (imageViewer && imageViewer.viewer) {
+                        imageViewer.viewer.removeEventListener('touchend', snapToCenter);
+                        imageViewer.viewer.removeEventListener('mouseup', snapToCenter);
+                    }
+                    imageViewer.destroy(); 
+                    imageViewer = null;
+                }
+            });
+            
+            imageViewer.show();
         }
 
         // --- XỬ LÝ QUÉT MÃ VẠCH CAMERA (TỰ ĐỘNG MỞ) ---
