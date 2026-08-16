@@ -233,7 +233,13 @@
 
     <!-- Modal Quét Mã Vạch -->
     <div id="scannerModal" class="custom-modal">
-        <span class="close-modal" onclick="closeScanner()">&times;</span>
+        <!-- Nút X (Đã đồng bộ) -->
+        <span class="close-modal" onclick="closeScanner()">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" width="22" height="22">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+        </span>
         <div class="scanner-box" onclick="event.stopPropagation()">
             <h3 style="margin-top:0; color:#1f2937">Quét Mã Vạch / QR</h3>
             <div id="reader" style="width:100%"></div>
