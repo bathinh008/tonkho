@@ -5,282 +5,856 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Quản Trị Kho Hàng</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Viewer.js để xem ảnh mượt mà như Zalo / index.html -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/viewerjs/1.11.6/viewer.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/viewerjs/1.11.6/viewer.min.js"></script>
+
+    <!-- Supabase, SweetAlert2, HTML5-QRCode, ZXing & Quagga2 (Full 1D & 2D Barcode Suite) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.20.0/umd/index.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@ericblade/quagga2@1.8.4/dist/quagga.min.js"></script>
     
     <style>
         /* --- 1. GLOBAL VARIABLES & RESET --- */
         :root {
             --primary: #4F46E5;
-            --primary-hover: #4338ca;
+            --primary-hover: #4338CA;
+            --primary-light: #EEF2FF;
+            --success: #10B981;
+            --warning: #F59E0B;
             --danger: #EF4444;
-            --bg-body: #F3F4F6;
-            --border: #E5E7EB;
+            --bg-body: #F8FAFC;
+            --bg-card: #FFFFFF;
+            --text-main: #0F172A;
+            --text-sub: #64748B;
+            --border: #E2E8F0;
+            --border-hover: #CBD5E1;
+            --radius-sm: 8px;
             --radius: 16px;
+            --radius-lg: 20px;
             --btn-radius: 30px;
-            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+            --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.06), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
         }
+
+        * { box-sizing: border-box; }
 
         body { 
             font-family: 'Inter', sans-serif; 
             background-color: var(--bg-body); 
-            color: #111827; margin: 0; padding: 0;
+            color: var(--text-main); 
+            margin: 0; padding: 0;
             -webkit-font-smoothing: antialiased;
         }
-        * { box-sizing: border-box; }
 
-        /* --- 2. COMPONENTS --- */
+        .clickable-img { cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; }
+        .clickable-img:hover { transform: scale(1.06); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+
+        /* --- 2. COMMON COMPONENTS --- */
         .modern-input {
             width: 100%; padding: 12px 16px; border: 1px solid var(--border);
-            border-radius: 12px; font-size: 15px; outline: none; transition: all 0.2s; margin-bottom: 12px;
+            border-radius: 12px; font-size: 14px; outline: none; transition: all 0.2s;
+            background: #FAFAFA; color: var(--text-main);
         }
-        .modern-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
+        .modern-input:focus { border-color: var(--primary); background: #ffffff; box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12); }
         
-        .btn {
-            padding: 10px 20px; border-radius: var(--btn-radius); font-weight: 600; 
-            cursor: pointer; border: none; text-decoration: none; 
-            display: inline-flex; align-items: center; justify-content: center;
-            transition: all 0.2s; font-size: 14px;
+        .form-label {
+            display: block; font-size: 13px; font-weight: 600; color: #334155; margin-bottom: 6px;
         }
-        .btn-primary { background: var(--primary); color: white; width: 100%; padding: 12px; font-size: 16px; }
-        .btn-primary:hover { background: var(--primary-hover); }
-        
-        .btn-outline { background: white; border: 1px solid var(--border); color: #374151; }
-        .btn-danger { background: #FEE2E2; color: #DC2626; }
-        .btn-secondary { background: #E5E7EB; color: #374151; }
-        .btn-outline:hover, .btn-secondary:hover { background: #F9FAFB; }
-        .btn-danger:hover { background: #FCA5A5; }
 
-        .card { background: white; border-radius: var(--radius); box-shadow: var(--shadow); padding: 24px; margin-bottom: 20px; }
+        .btn {
+            padding: 10px 18px; border-radius: var(--btn-radius); font-weight: 600; 
+            cursor: pointer; border: none; text-decoration: none; 
+            display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+            transition: all 0.2s; font-size: 13px;
+        }
+        .btn-primary { background: var(--primary); color: white; box-shadow: 0 2px 6px rgba(79, 70, 229, 0.25); }
+        .btn-primary:hover:not(:disabled) { background: var(--primary-hover); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(79, 70, 229, 0.35); color: white; }
+        
+        .btn-outline { background: white; border: 1px solid var(--border); color: #334155; box-shadow: var(--shadow-sm); }
+        .btn-outline:hover { background: #F8FAFC; border-color: var(--border-hover); color: #0F172A; transform: translateY(-1px); }
+        
+        .btn-danger { background: #FEF2F2; border: 1px solid #FEE2E2; color: #DC2626; }
+        .btn-danger:hover { background: #FEE2E2; color: #B91C1C; transform: translateY(-1px); }
+        
+        .btn-secondary { background: #F1F5F9; color: #475569; border: 1px solid var(--border); }
+        .btn-secondary:hover { background: #E2E8F0; color: #0F172A; }
+
+        .btn-scan {
+            background: #0F172A; color: white; border: none;
+            border-radius: 50%; width: 46px; height: 46px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; 
+            transition: 0.2s; flex-shrink: 0; padding: 0;
+            box-shadow: 0 4px 10px rgba(15, 23, 42, 0.2);
+        }
+        .btn-scan:hover { background: #334155; transform: translateY(-2px); box-shadow: 0 6px 14px rgba(15, 23, 42, 0.3); }
+        .btn-scan svg { width: 22px; height: 22px; }
+
+        /* SweetAlert2 Styling */
+        div:where(.swal2-container) button:where(.swal2-styled).swal2-confirm, 
+        div:where(.swal2-container) button:where(.swal2-styled).swal2-cancel,
+        div:where(.swal2-container) button:where(.swal2-styled).swal2-deny {
+            border-radius: 30px !important;
+            font-family: 'Inter', sans-serif !important;
+            font-weight: 600 !important;
+            padding: 10px 24px !important;
+            font-size: 14px !important;
+        }
+        div:where(.swal2-container) .swal2-popup {
+            border-radius: 20px !important;
+            font-family: 'Inter', sans-serif !important;
+        }
+
+        /* Loading Skeleton */
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        .skeleton {
+            background: linear-gradient(90deg, #E2E8F0 25%, #F1F5F9 50%, #E2E8F0 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 6px;
+            display: inline-block;
+        }
+        .skeleton-title { height: 16px; width: 65%; margin-bottom: 6px; }
+        .skeleton-badge { height: 22px; width: 85px; border-radius: 12px; }
+
+        .btn-spinner {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(255, 255, 255, 0.35);
+            border-radius: 50%;
+            border-top-color: #ffffff;
+            animation: spin 0.8s linear infinite;
+            margin-right: 6px;
+            vertical-align: middle;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
 
         /* --- 3. LOGIN PAGE --- */
         .login-wrapper {
             min-height: 100vh; display: flex; align-items: center; justify-content: center;
-            background: linear-gradient(135deg, #E0E7FF 0%, #F3F4F6 100%); padding: 20px;
+            background: radial-gradient(circle at 50% 10%, #EEF2FF 0%, #F8FAFC 100%);
+            padding: 20px;
         }
-        .login-card { width: 100%; max-width: 360px; text-align: center; padding: 40px; }
-
-        /* --- 4. DASHBOARD LAYOUT --- */
-        #adminPanel { display: none; max-width: 1100px; margin: 0 auto; padding: 30px 20px; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
-        .header h2 { font-size: 24px; font-weight: 700; margin: 0; display: flex; align-items: center; gap: 10px;}
-        .header-actions { display: flex; gap: 10px; }
-        
-        /* Form & Stats */
-        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; }
-        .form-actions { display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end; }
-
-        /* [NEW] STATS CARD CSS */
-        .stats-grid {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;
+        .login-card {
+            width: 100%; max-width: 400px; text-align: center; padding: 42px 36px;
+            background: white; border-radius: var(--radius-lg);
+            border: 1px solid var(--border); box-shadow: var(--shadow-lg);
         }
-        .stat-card {
-            background: white; padding: 20px; border-radius: var(--radius);
-            box-shadow: var(--shadow); display: flex; flex-direction: column; align-items: flex-start;
-            border: 1px solid var(--border);
+        .login-logo {
+            width: 60px; height: 60px; border-radius: 16px;
+            background: var(--primary-light); color: var(--primary);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 28px; margin: 0 auto 16px auto;
         }
-        .stat-label { color: #6B7280; font-size: 13px; font-weight: 500; text-transform: uppercase; margin-bottom: 5px; }
-        .stat-value { font-size: 28px; font-weight: 800; color: #111827; }
-        .text-red { color: #DC2626; }
 
-        /* Search */
-        .search-wrapper { position: relative; margin-bottom: 20px; }
-        .search-input { width: 100%; padding: 14px 20px 14px 45px; border-radius: 50px; border: 1px solid var(--border); outline: none; font-size: 15px; background: white; box-shadow: var(--shadow);}
-        .search-icon { position: absolute; left: 18px; top: 50%; transform: translateY(-50%); color: #9CA3AF; font-size: 18px;}
-
-        /* Table Styling */
-        .table-container { background: white; border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; border: 1px solid var(--border); }
-        table { width: 100%; border-collapse: collapse; }
-        thead th { background: #F9FAFB; padding: 16px; text-align: left; font-size: 12px; text-transform: uppercase; color: #6B7280; border-bottom: 1px solid var(--border); font-weight: 600; }
-        tbody td { padding: 16px; border-bottom: 1px solid #F3F4F6; vertical-align: middle; }
+        /* --- 4. DASHBOARD LAYOUT & APP HEADER --- */
+        #adminPanel { display: none; max-width: 1240px; margin: 0 auto; padding: 32px 24px; }
         
-        .thumb-admin { width: 200px; height: 200px; border-radius: 12px; object-fit: cover; border: 1px solid #eee; background: #f9f9f9; }
-        .badge { display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
-        .bg-green { background: #D1FAE5; color: #065F46; }
-        .bg-red { background: #FEE2E2; color: #991B1B; }
-        
-        .action-btn { border: none; background: none; cursor: pointer; padding: 8px; border-radius: 50%; transition: 0.2s; font-size: 16px; display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px;}
-        .icon-edit { background: #FFFBEB; color: #B45309; }
-        .icon-trash { background: #FEF2F2; color: #DC2626; margin-left: 5px; }
-        .action-btn:hover { transform: scale(1.1); }
+        .dash-header {
+            display: flex; justify-content: space-between; align-items: center;
+            background: white; padding: 22px 28px; border-radius: var(--radius);
+            border: 1px solid var(--border); box-shadow: var(--shadow-sm);
+            margin-bottom: 24px;
+        }
+        .dash-brand { display: flex; align-items: center; gap: 16px; }
+        .dash-logo {
+            width: 48px; height: 48px; border-radius: 14px;
+            background: var(--primary-light); color: var(--primary);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 24px; flex-shrink: 0;
+        }
+        .dash-badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            font-size: 11px; font-weight: 700; color: #059669;
+            background: #ECFDF5; padding: 3px 10px; border-radius: 20px;
+            margin-bottom: 3px;
+        }
+        .status-dot {
+            width: 6px; height: 6px; border-radius: 50%;
+            background: #10B981; box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+        }
+        .dash-title {
+            font-size: 22px; font-weight: 800; color: #0F172A;
+            margin: 0; letter-spacing: -0.4px;
+        }
+        .dash-actions { display: flex; gap: 10px; align-items: center; }
 
-        .pc-barcode { font-family: monospace; font-weight: 600; color: var(--primary); background: #EEF2FF; padding: 4px 8px; border-radius: 6px; font-size: 25px; }
-        .item-name { font-weight: 600; color: #111827; font-size: 25px; margin-bottom: 4px; }
-        .item-cat { color: #6B7280; font-size: 13px; }
-        .stock-num { font-weight: 700; font-size: 18px; margin-right: 8px; }
+        /* --- 5. METRICS GRID (4 STATS CARDS) --- */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .metric-card {
+            background: white; border-radius: var(--radius); padding: 18px 20px;
+            border: 1px solid var(--border); box-shadow: var(--shadow-sm);
+            display: flex; align-items: center; gap: 16px;
+            transition: all 0.2s ease;
+        }
+        .metric-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+            border-color: var(--border-hover);
+        }
+        .metric-icon-wrap {
+            width: 48px; height: 48px; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 22px; flex-shrink: 0;
+        }
+        .metric-content { display: flex; flex-direction: column; min-width: 0; }
+        .metric-label { font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-sub); letter-spacing: 0.5px; }
+        .metric-val { font-size: 24px; font-weight: 800; color: var(--text-main); line-height: 1.2; margin: 3px 0 2px 0; }
+        .metric-sub { font-size: 12px; color: #94A3B8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .text-red { color: #DC2626 !important; }
+
+        /* --- 6. CONTROL PANEL (SEARCH & TOOLBAR) --- */
+        .control-panel {
+            background: white; border-radius: var(--radius);
+            padding: 20px 24px; border: 1px solid var(--border);
+            box-shadow: var(--shadow-sm); margin-bottom: 24px;
+            display: flex; flex-direction: column; gap: 16px;
+        }
+        .search-filter-row {
+            display: flex; gap: 12px; align-items: center;
+        }
+        .search-wrapper { position: relative; flex: 1; display: flex; align-items: center; }
+        .search-input {
+            width: 100%; padding: 13px 44px 13px 44px; border-radius: 50px;
+            border: 1px solid var(--border); outline: none; font-size: 14px;
+            background: #F8FAFC; box-sizing: border-box; transition: all 0.2s;
+        }
+        .search-input:focus {
+            background: white; border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
+        }
+        .search-icon { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #94A3B8; font-size: 16px; pointer-events: none; }
+        
+        .clear-icon {
+            position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+            color: #94A3B8; cursor: pointer; display: none; 
+            width: 28px; height: 28px; border-radius: 50%;
+            align-items: center; justify-content: center;
+            transition: all 0.2s ease; z-index: 2;
+        }
+        .clear-icon svg { width: 14px; height: 14px; }
+        .clear-icon:hover { color: #EF4444; background-color: #FEE2E2; }
+        .clear-icon:active { transform: translateY(-50%) scale(0.9); }
+
+        .btn-scan {
+            background: #0F172A; color: white; border: none;
+            border-radius: 50%; width: 46px; height: 46px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; 
+            transition: 0.2s; flex-shrink: 0; padding: 0;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.18);
+        }
+        .btn-scan:hover { background: #334155; transform: scale(1.05); color: white; }
+        .btn-scan:active { transform: scale(0.95); }
+        .btn-scan svg { width: 22px; height: 22px; color: white; }
+
+        .select-wrapper { min-width: 220px; }
+        .custom-select {
+            width: 100%; padding: 13px 20px; border-radius: 50px;
+            border: 1px solid var(--border); background: #F8FAFC;
+            font-size: 14px; font-weight: 600; color: #334155;
+            outline: none; cursor: pointer; transition: all 0.2s;
+        }
+        .custom-select:focus { background: white; border-color: var(--primary); }
+
+        .toolbar-bottom-row {
+            display: flex; justify-content: space-between; align-items: center;
+            gap: 12px; flex-wrap: wrap;
+        }
+        .filter-pills { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .filter-pill {
+            background: #F8FAFC; border: 1px solid var(--border);
+            color: #475569; padding: 7px 16px; border-radius: 20px;
+            font-size: 13px; font-weight: 600; cursor: pointer;
+            transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px;
+        }
+        .filter-pill:hover { border-color: var(--primary); color: var(--primary); background: white; }
+        .filter-pill.active {
+            background: var(--primary); color: white; border-color: var(--primary);
+            box-shadow: 0 2px 8px rgba(79, 70, 229, 0.25);
+        }
+
+        .main-action-buttons { display: flex; gap: 10px; align-items: center; }
+        .btn-add-prod {
+            padding: 10px 22px; font-size: 14px; font-weight: 700;
+        }
+
+        /* --- 7. INVENTORY TABLE CARD --- */
+        .inventory-table-card {
+            background: white; border-radius: var(--radius);
+            border: 1px solid var(--border); box-shadow: var(--shadow-sm);
+            overflow: hidden;
+        }
+        .table-card-header {
+            padding: 16px 24px; border-bottom: 1px solid var(--border);
+            display: flex; justify-content: space-between; align-items: center;
+            background: #FAFAFC;
+        }
+        .table-title {
+            font-size: 15px; font-weight: 700; color: #0F172A;
+            display: flex; align-items: center; gap: 10px;
+        }
+        .counter-badge {
+            font-size: 12px; font-weight: 600; color: #475569;
+            background: #E2E8F0; padding: 2px 9px; border-radius: 12px;
+        }
+
+        .table-responsive { width: 100%; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+        thead th {
+            background: #F8FAFC; padding: 14px 20px;
+            font-size: 11px; font-weight: 700; text-transform: uppercase;
+            color: #64748B; letter-spacing: 0.5px; border-bottom: 1px solid var(--border);
+        }
+        tbody tr {
+            border-bottom: 1px solid #F1F5F9;
+            transition: background 0.15s ease;
+        }
+        tbody tr:hover { background: #F8FAFC; }
+        tbody tr:last-child { border-bottom: none; }
+        tbody td { padding: 14px 20px; vertical-align: middle; }
+
+        .thumb-admin {
+            width: 68px; height: 68px; border-radius: 10px; object-fit: cover;
+            border: 1px solid #E2E8F0; background: #F8FAFC; flex-shrink: 0;
+        }
+        .pc-barcode {
+            font-family: monospace; font-weight: 700; color: #334155;
+            background: #F1F5F9; padding: 4px 8px; border-radius: 6px;
+            font-size: 13px; display: inline-flex; align-items: center; gap: 5px;
+            cursor: pointer; border: 1px solid #E2E8F0; transition: 0.15s;
+        }
+        .pc-barcode:hover {
+            border-color: var(--primary); color: var(--primary); background: #EEF2FF;
+        }
+
+        .item-name { font-weight: 700; color: #0F172A; font-size: 15px; margin-bottom: 4px; line-height: 1.35; }
+        .item-cat {
+            display: inline-flex; align-items: center; padding: 2px 8px;
+            border-radius: 6px; font-size: 12px; font-weight: 600;
+            background: #F1F5F9; color: #475569;
+        }
+        .stock-num { font-weight: 800; font-size: 16px; color: #0F172A; margin-right: 8px; }
+
+        /* Badges */
+        .badge { display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; }
+        .bg-green { background: #ECFDF5; color: #059669; }
+        .bg-yellow { background: #FFFBEB; color: #D97706; }
+        .bg-red { background: #FEF2F2; color: #DC2626; }
+
+        /* Action Buttons in Row */
+        .row-actions { display: flex; gap: 6px; justify-content: center; align-items: center; }
+        .action-btn {
+            border: 1px solid transparent; background: transparent; cursor: pointer;
+            padding: 0; border-radius: 50%; transition: 0.2s; font-size: 15px;
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 36px; height: 36px;
+        }
+        .icon-edit { background: #FFFBEB; color: #B45309; border-color: #FEF3C7; }
+        .icon-edit:hover { background: #FDE68A; transform: scale(1.08); }
+        .icon-trash { background: #FEF2F2; color: #DC2626; border-color: #FEE2E2; }
+        .icon-trash:hover { background: #FCA5A5; color: #991B1B; transform: scale(1.08); }
+
         .mobile-only { display: none; }
 
-        /* --- 5. MOBILE RESPONSIVE --- */
-        @media (max-width: 768px) {
-            #adminPanel { padding: 20px 15px; }
-            .header { flex-direction: column; align-items: flex-start; gap: 15px; }
-            .header-actions { width: 100%; }
-            .header-actions .btn { flex: 1; }
-            
-            .card { padding: 15px; }
-            .form-grid { grid-template-columns: 1fr; gap: 10px; }
-            .form-actions .btn { flex: 1; padding: 12px; }
+        /* --- 8. MODAL POPUP --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px);
+            display: none; justify-content: center; align-items: center; z-index: 9999;
+            padding: 16px;
+        }
+        .modal-content {
+            background: white; border-radius: var(--radius-lg); width: 100%; max-width: 580px;
+            max-height: 90vh; display: flex; flex-direction: column;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            animation: modalIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            overflow: hidden; border: 1px solid var(--border);
+        }
+        @keyframes modalIn { from { transform: scale(0.94); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        
+        .modal-header {
+            padding: 20px 24px; border-bottom: 1px solid var(--border);
+            display: flex; justify-content: space-between; align-items: center;
+            background: #FAFAFC;
+        }
+        .modal-header h3 { margin: 0; font-size: 17px; color: #0F172A; font-weight: 800; }
+        .modal-close {
+            background: #F1F5F9; border: none; width: 34px; height: 34px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; cursor: pointer;
+            color: #64748B; font-size: 16px; font-weight: bold; transition: 0.2s;
+        }
+        .modal-close:hover { background: #E2E8F0; color: #0F172A; }
+        
+        .modal-body { padding: 24px; overflow-y: auto; flex: 1; }
+        
+        .modal-footer {
+            padding: 16px 24px; border-top: 1px solid var(--border);
+            display: flex; justify-content: flex-end; gap: 10px;
+            background: #FAFAFC;
+        }
 
-            /* Stats on mobile */
-            .stat-value { font-size: 24px; }
+        /* Image Tabs */
+        .img-tabs { display: flex; gap: 8px; margin-bottom: 12px; }
+        .img-tab-btn {
+            flex: 1; padding: 9px 12px; border-radius: 10px; border: 1px solid var(--border);
+            background: #F8FAFC; color: #475569; font-size: 13px; font-weight: 600;
+            cursor: pointer; transition: 0.2s;
+        }
+        .img-tab-btn.active {
+            background: var(--primary); color: white; border-color: var(--primary);
+        }
+
+        /* Image Big Preview Box */
+        .preview-box {
+            border: 2px dashed #CBD5E1; border-radius: 14px; padding: 14px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            background: #F8FAFC; min-height: 140px; margin-top: 10px; position: relative;
+        }
+        .preview-img {
+            max-height: 150px; max-width: 100%; object-fit: contain; border-radius: 10px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08); background: white;
+        }
+
+        .btn-upload-file {
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            width: 100%; padding: 12px; border: 2px dashed #CBD5E1; border-radius: 12px;
+            background: #F8FAFC; color: #475569; font-weight: 600; cursor: pointer;
+            transition: 0.2s; margin-bottom: 12px;
+        }
+        .btn-upload-file:hover { background: #F1F5F9; border-color: var(--primary); color: var(--primary); }
+
+        .close-modal {
+            position: absolute; top: 20px; right: 20px;
+            width: 44px; height: 44px;
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white; border-radius: 50%;
+            display: flex; justify-content: center; align-items: center;
+            cursor: pointer; transition: all 0.2s ease; z-index: 10002;
+            border: none; outline: none;
+        }
+        .close-modal:hover { background-color: rgba(0, 0, 0, 0.8); transform: scale(1.1); }
+        .close-modal:active { transform: scale(0.9); }
+        .close-modal svg { width: 22px; height: 22px; color: white; }
+
+        .viewer-button {
+            top: 20px !important; right: 20px !important;
+            width: 44px !important; height: 44px !important;
+            border-radius: 50% !important; background-color: rgba(0, 0, 0, 0.5) !important;
+            transition: all 0.2s ease !important;
+        }
+        .viewer-button:hover { background-color: rgba(0, 0, 0, 0.8) !important; transform: scale(1.1) !important; }
+        .viewer-button:active { transform: scale(0.9) !important; }
+        .viewer-button::before { bottom: 12px !important; left: 12px !important; }
+
+        /* --- 9. MOBILE RESPONSIVE --- */
+        @media (max-width: 768px) {
+            #adminPanel { padding: 16px 14px; }
+            .dash-header { padding: 16px; flex-direction: column; align-items: flex-start; gap: 14px; }
+            .dash-actions { width: 100%; justify-content: space-between; }
+            .dash-actions .btn { flex: 1; padding: 8px 10px; font-size: 12px; }
+            .dash-title { font-size: 18px; }
+
+            .metrics-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 16px; }
+            .metric-card { padding: 14px; }
+            .metric-val { font-size: 20px; }
+            .metric-sub { display: none; }
+
+            .control-panel { padding: 14px; gap: 10px; margin-bottom: 16px; }
+            .search-filter-row { display: flex; flex-direction: row; gap: 8px; align-items: center; }
+            .search-wrapper { flex: 1.5; min-width: 0; }
+            .search-input { padding: 10px 32px 10px 28px; font-size: 13px; border-radius: 50px; }
+            .search-icon { left: 8px; font-size: 13px; }
+            .clear-icon { right: 8px; width: 22px; height: 22px; }
+            .clear-icon svg { width: 12px; height: 12px; }
+            .btn-scan { width: 38px; height: 38px; border-radius: 50%; }
+            .btn-scan svg { width: 19px; height: 19px; }
+            .select-wrapper { flex: 1; min-width: 0; max-width: 125px; }
+            .custom-select { padding: 10px 10px; font-size: 12px; border-radius: 50px; text-overflow: ellipsis; white-space: nowrap; }
+            
+            .toolbar-bottom-row { flex-direction: column; align-items: stretch; gap: 10px; }
+            .filter-pills { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; -webkit-overflow-scrolling: touch; }
+            .filter-pill { flex-shrink: 0; }
+            .main-action-buttons { display: flex; flex-direction: row; width: 100%; gap: 8px; }
+            .main-action-buttons .btn { flex: 1; padding: 10px 12px; font-size: 13px; white-space: nowrap; }
 
             table, thead, tbody, th, td, tr { display: block; }
             thead { display: none; }
             .pc-only-cell { display: none; }
-            .mobile-only { display: inline-block; }
+            .mobile-only { display: block; }
 
             tbody tr {
-                display: grid;
-                //grid-template-columns: 80px 1fr;
-                grid-template-rows: auto auto; 
-                gap: 10px 15px;
-                background: white; padding: 15px; border-radius: var(--radius);
-                box-shadow: var(--shadow); margin-bottom: 15px; border: 1px solid var(--border);
-                position: relative;
+                display: flex; gap: 12px; background: white; 
+                padding: 14px; border-radius: var(--radius);
+                box-shadow: var(--shadow-sm); margin-bottom: 12px; 
+                border: 1px solid var(--border); position: relative;
+                align-items: flex-start;
             }
 
             tbody td { padding: 0; border: none; }
-            tbody td:nth-child(1) { grid-row: 1 / 3; grid-column: 1 / 2; }
-            .thumb-admin { width: 150px; height: 150px; }
+            tbody td:nth-child(1) { flex-shrink: 0; }
+            .thumb-admin { width: 84px; height: 84px; border-radius: 10px; object-fit: cover; }
 
-            tbody td:nth-child(3) { grid-row: 1; grid-column: 2 / 3; align-self: start; }
-            tbody td:nth-child(4) { 
-                grid-row: 2; grid-column: 2 / 3; align-self: end;
-                display: flex; align-items: center; justify-content: space-between;
-                padding-top: 5px;
+            tbody td:nth-child(3) { 
+                flex: 1; min-width: 0; display: flex; 
+                flex-direction: column; gap: 4px; padding-bottom: 2px;
             }
-            tbody td:nth-child(5) { position: absolute; top: 10px; right: 10px; display: flex; gap: 5px; }
             
-            .item-name { font-size: 16px; margin-bottom: 6px; padding-right: 70px; }
-            .mobile-barcode { font-family: monospace; font-size: 13px; color: #6B7280; background: #F3F4F6; padding: 2px 6px; border-radius: 4px; }
+            .item-name { 
+                font-size: 15px; font-weight: 700; color: #0F172A; 
+                line-height: 1.35; margin-bottom: 2px; word-break: break-word; 
+            }
+            .mobile-barcode { 
+                display: inline-block; font-family: monospace; 
+                font-size: 12px; color: #475569; background: #F1F5F9; 
+                padding: 2px 6px; border-radius: 4px; font-weight: 600;
+            }
+
+            tbody td:nth-child(5) { 
+                position: absolute; bottom: 12px; right: 12px; 
+                display: flex; gap: 6px; 
+            }
+            .action-btn { width: 34px; height: 34px; font-size: 14px; border-radius: 50%; }
         }
     </style>
 </head>
 <body>
 
+    <!-- MÀN HÌNH ĐĂNG NHẬP -->
     <div class="login-wrapper" id="loginForm">
-        <div class="card login-card">
-            <div style="font-size: 40px; margin-bottom: 15px;">🔐</div>
-            <h2 style="margin: 0 0 10px 0; font-size: 24px;">Admin Portal</h2>
-            <p style="color:#6B7280; margin-bottom:25px">Đăng nhập để quản lý</p>
-            <input type="email" id="email" class="modern-input" placeholder="Email quản trị...">
-            <input type="password" id="password" class="modern-input" placeholder="Mật khẩu...">
-            <button onclick="handleLogin()" class="btn btn-primary">Đăng Nhập</button>
-            <p id="msg" style="color:red; margin-top:15px; font-size:14px; min-height: 20px;"></p>
-            <a href="index.html" style="margin-top:10px; display:block; color:#6B7280; text-decoration:none; font-size:14px">← Về trang chủ</a>
+        <div class="login-card">
+            <div class="login-logo">🔐</div>
+            <h2 style="margin: 0 0 8px 0; font-size: 22px; font-weight: 800; color: #0F172A;">Admin Dashboard</h2>
+            <p style="color: #64748B; margin-bottom: 24px; font-size: 14px;">Đăng nhập để quản trị kho hàng</p>
+            <div style="text-align: left; margin-bottom: 12px;">
+                <label class="form-label">Email quản trị</label>
+                <input type="email" id="email" class="modern-input" placeholder="admin@example.com">
+            </div>
+            <div style="text-align: left; margin-bottom: 20px;">
+                <label class="form-label">Mật khẩu</label>
+                <input type="password" id="password" class="modern-input" placeholder="••••••••">
+            </div>
+            <button onclick="handleLogin()" class="btn btn-primary" style="width: 100%; padding: 13px; font-size: 15px; font-weight: 700;">
+                Đăng Nhập Quản Trị
+            </button>
+            <p id="msg" style="color: #DC2626; margin-top: 14px; font-size: 13px; min-height: 20px; font-weight: 600;"></p>
+            <a href="index.html" style="margin-top: 8px; display: inline-block; color: #64748B; text-decoration: none; font-size: 13px; font-weight: 500;">← Quay về trang chủ</a>
         </div>
     </div>
 
+    <!-- BẢNG ĐIỀU KHIỂN ADMIN DASHBOARD -->
     <div id="adminPanel">
-        <div class="header">
-            <h2>📦 Kho Hàng</h2>
-            <div class="header-actions">
-                <a href="index.html" class="btn btn-outline">Xem Web</a>
-                <button onclick="handleLogout()" class="btn btn-danger">Đăng xuất</button>
+        <!-- TOP APP HEADER -->
+        <header class="dash-header">
+            <div class="dash-brand">
+                <div class="dash-logo">📦</div>
+                <div>
+                    <div class="dash-badge"><span class="status-dot"></span> Quản Trị Viên</div>
+                    <h1 class="dash-title">Bảng Quản Trị Kho Hàng</h1>
+                </div>
+            </div>
+            <div class="dash-actions">
+                <a href="index.html" class="btn btn-outline" title="Xem giao diện người dùng">
+                    <span>👀</span> <span class="btn-text">Xem Web Bán Hàng</span>
+                </a>
+                <button onclick="handleLogout()" class="btn btn-danger" title="Đăng xuất">
+                    <span>🚪</span> <span class="btn-text">Đăng Xuất</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- 4 THẺ THỐNG KÊ METRICS CARDS -->
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-icon-wrap" style="background: #EEF2FF; color: #4F46E5;">📦</div>
+                <div class="metric-content">
+                    <span class="metric-label">Tổng Mẫu Mã</span>
+                    <div class="metric-val" id="stat-total">...</div>
+                    <span class="metric-sub">Sản phẩm đang lưu kho</span>
+                </div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-icon-wrap" style="background: #ECFDF5; color: #059669;">📊</div>
+                <div class="metric-content">
+                    <span class="metric-label">Tổng Tồn Kho</span>
+                    <div class="metric-val" id="stat-total-stock">...</div>
+                    <span class="metric-sub">Chiếc tồn thực tế</span>
+                </div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-icon-wrap" style="background: #FEF3C7; color: #D97706;">🗄️</div>
+                <div class="metric-content">
+                    <span class="metric-label">Phân Loại Tủ</span>
+                    <div class="metric-val" id="stat-categories">...</div>
+                    <span class="metric-sub">Nhóm danh mục mẫu</span>
+                </div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-icon-wrap" style="background: #FEF2F2; color: #DC2626;">⚠️</div>
+                <div class="metric-content">
+                    <span class="metric-label">Cần Nhập Hàng</span>
+                    <div class="metric-val text-red" id="stat-out">...</div>
+                    <span class="metric-sub" id="stat-out-sub">Tồn kho ≤ 3 chiếc</span>
+                </div>
             </div>
         </div>
 
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-label">Tổng mẫu mã</div>
-                <div class="stat-value" id="stat-total">...</div>
+        <!-- TRUNG TÂM ĐIỀU KHIỂN & BỘ LỌC (CONTROL PANEL) -->
+        <div class="control-panel">
+            <div class="search-filter-row">
+                <div class="search-wrapper">
+                    <span class="search-icon">🔍</span>
+                    <input id="adminSearchInput" type="text" class="search-input" placeholder="Tìm tên, mã vạch, loại tủ..." oninput="filterAndSearchData(); toggleAdminClear()">
+                    
+                    <!-- Nút X xóa nhanh -->
+                    <span id="adminClearBtn" class="clear-icon" onclick="clearAdminSearch()" title="Xóa tìm kiếm">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </span>
+                </div>
+
+                <!-- Nút quét mã vạch đồng bộ với bên bán hàng -->
+                <button type="button" class="btn-scan" onclick="openAdminScanner('search')" title="Quét mã vạch tìm kiếm">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 7V5a2 2 0 0 1 2-2h2"></path>
+                        <path d="M17 3h2a2 2 0 0 1 2 2v2"></path>
+                        <path d="M21 17v2a2 2 0 0 1-2 2h-2"></path>
+                        <path d="M7 21H5a2 2 0 0 1-2-2v-2"></path>
+                        <path d="M8 7v10"></path>
+                        <path d="M12 7v10"></path>
+                        <path d="M16 7v10"></path>
+                    </svg>
+                </button>
+
+                <div class="select-wrapper">
+                    <select id="categoryFilter" class="custom-select" onchange="filterAndSearchData()">
+                        <option value="">🗄️ Tất cả phân loại</option>
+                    </select>
+                </div>
             </div>
-            <div class="stat-card">
-                <div class="stat-label">Cần nhập hàng</div>
-                <div class="stat-value text-red" id="stat-out">...</div>
+
+            <div class="toolbar-bottom-row">
+                <div class="filter-pills">
+                    <button class="filter-pill active" data-filter="all" onclick="setAdminFilter('all')">✨ Tất cả</button>
+                    <button class="filter-pill" data-filter="in_stock" onclick="setAdminFilter('in_stock')">🟢 Còn nhiều (>10)</button>
+                    <button class="filter-pill" data-filter="low_stock" onclick="setAdminFilter('low_stock')">⚡ Sắp hết (1-10)</button>
+                    <button class="filter-pill" data-filter="out_of_stock" onclick="setAdminFilter('out_of_stock')">⚠️ Hết hàng (0)</button>
+                </div>
+                
+                <div class="main-action-buttons">
+                    <button onclick="exportToCSV()" class="btn btn-outline btn-export" title="Tải toàn bộ dữ liệu ra file Excel CSV">
+                        <span>📥</span> <span class="btn-text">Xuất Excel / CSV</span>
+                    </button>
+                    <button onclick="openProductModal()" class="btn btn-primary btn-add-prod" title="Thêm mặt hàng mới">
+                        <span>➕</span> <span>Thêm Hàng Mới</span>
+                    </button>
+                </div>
             </div>
         </div>
 
-        <div class="card">
-            <div style="font-size:18px; font-weight:600; margin-bottom:20px; color:#374151; display:flex; align-items:center; gap:8px">
-                📝 Thông tin sản phẩm
+        <!-- BẢNG DANH SÁCH SẢN PHẨM TRONG KHO -->
+        <div class="inventory-table-card">
+            <div class="table-card-header">
+                <div class="table-title">
+                    <span>📋 Danh Sách Sản Phẩm Trong Kho</span>
+                    <span id="items-counter-badge" class="counter-badge">0 sản phẩm</span>
+                </div>
             </div>
-            <input type="hidden" id="inp-id">
-            <div class="form-grid">
-                <input id="inp-barcode" class="modern-input" placeholder="Mã vạch (Barcode)">
-                <input id="inp-loai" class="modern-input" placeholder="Loại (VD: Tủ Nhựa)">
-                <input id="inp-ten" class="modern-input" placeholder="Tên mẫu (VD: Màu Xanh)">
-                <input id="inp-ton" type="number" class="modern-input" placeholder="Số lượng tồn">
-                <input id="inp-hinh" class="modern-input" placeholder="Tên file ảnh (VD: tu1.jpg)">
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th width="90">Hình ảnh</th>
+                            <th class="pc-only-cell" width="160">Mã Barcode</th>
+                            <th>Mẫu Sản Phẩm & Phân Loại</th>
+                            <th width="160">Tồn Kho Thực Tế</th>
+                            <th width="110" style="text-align:center">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body"></tbody>
+                </table>
             </div>
-            <div class="form-actions">
-                <button class="btn btn-secondary" onclick="resetForm()">Hủy bỏ</button>
-                <button class="btn btn-primary" style="width:auto; padding-left:30px; padding-right:30px" onclick="saveData()">💾 Lưu Dữ Liệu</button>
-            </div>
-        </div>
-
-        <div class="search-wrapper">
-            <span class="search-icon">🔍</span>
-            <input type="text" class="search-input" placeholder="Tìm kiếm tên hoặc barcode..." oninput="searchData(this.value)">
-        </div>
-
-        <div class="table-container">
-            <table>
-                <thead>
-                    <tr>
-                        <th width="90">Hình ảnh</th>
-                        <th class="pc-only-cell" width="120">Barcode</th>
-                        <th>Thông tin chi tiết</th>
-                        <th width="150">Tồn Kho</th>
-                        <th width="100" style="text-align:center">Thao tác</th>
-                    </tr>
-                </thead>
-                <tbody id="table-body"></tbody>
-            </table>
         </div>
     </div>
+
+    <!-- MODAL THÊM / SỬA HÀNG HÓA -->
+    <div id="productModal" class="modal-overlay" onclick="if(event.target === this) closeProductModal()">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title">✨ Thêm Sản Phẩm Mới</h3>
+                <button class="modal-close" onclick="closeProductModal()">✕</button>
+            </div>
+            
+            <div class="modal-body">
+                <input type="hidden" id="inp-id">
+                
+                <!-- Mã Vạch + Nút Quét Barcode -->
+                <div style="margin-bottom: 14px;">
+                    <label class="form-label">Mã Vạch (Barcode) *</label>
+                    <div style="display:flex; gap: 10px; align-items: center;">
+                        <input id="inp-barcode" class="modern-input" placeholder="Ví dụ: 893500123456" style="margin-bottom: 0;">
+                        <button type="button" class="btn-scan" onclick="openAdminScanner()" title="Quét mã vạch">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M3 7V5a2 2 0 0 1 2-2h2"></path>
+                                <path d="M17 3h2a2 2 0 0 1 2 2v2"></path>
+                                <path d="M21 17v2a2 2 0 0 1-2 2h-2"></path>
+                                <path d="M7 21H5a2 2 0 0 1-2-2v-2"></path>
+                                <path d="M8 7v10"></path>
+                                <path d="M12 7v10"></path>
+                                <path d="M16 7v10"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Loại Tủ (Có gợi ý Datalist) -->
+                <div style="margin-bottom: 14px;">
+                    <label class="form-label">Loại Tủ / Danh Mục</label>
+                    <input id="inp-loai" list="categoryList" class="modern-input" placeholder="Chọn hoặc nhập loại (VD: Tủ KATA, Tủ TABI...)">
+                    <datalist id="categoryList"></datalist>
+                </div>
+
+                <!-- Tên Mẫu Sản Phẩm -->
+                <div style="margin-bottom: 14px;">
+                    <label class="form-label">Tên Mẫu / Màu Sắc *</label>
+                    <input id="inp-ten" class="modern-input" placeholder="Ví dụ: 5 Ngăn Màu Xanh Thỏ Con">
+                </div>
+
+                <!-- Số Lượng Tồn Kho -->
+                <div style="margin-bottom: 14px;">
+                    <label class="form-label">Số Lượng Tồn Kho *</label>
+                    <input id="inp-ton" type="number" min="0" class="modern-input" placeholder="Nhập số lượng (VD: 10)">
+                </div>
+
+                <!-- Phần Hình Ảnh Sản Phẩm -->
+                <div>
+                    <label class="form-label">Hình Ảnh Sản Phẩm</label>
+                    
+                    <!-- Tabs chọn phương thức ảnh -->
+                    <div class="img-tabs">
+                        <button type="button" class="img-tab-btn active" id="tab-link-btn" onclick="switchImageTab('link')">🔗 Dán Link / Tên file</button>
+                        <button type="button" class="img-tab-btn" id="tab-upload-btn" onclick="switchImageTab('upload')">📁 Tải Ảnh Lên</button>
+                    </div>
+
+                    <!-- Chế độ 1: Dán Link / Tên file -->
+                    <div id="tab-link-content">
+                        <input id="inp-hinh" class="modern-input" placeholder="Dán link Google Drive, link ảnh hoặc tên file (tu1.jpg)..." oninput="previewAdminImage(this.value)">
+                    </div>
+
+                    <!-- Chế độ 2: Upload trực tiếp -->
+                    <div id="tab-upload-content" style="display: none;">
+                        <label class="btn-upload-file">
+                            <span>📤 Chọn tệp ảnh từ máy tính / điện thoại</span>
+                            <input type="file" id="inp-file-upload" accept="image/*" style="display: none;" onchange="handleImageUpload(this)">
+                        </label>
+                        <div id="upload-status" style="font-size: 13px; text-align: center; color: var(--primary); margin-bottom: 8px;"></div>
+                    </div>
+
+                    <!-- Khung Preview Ảnh Lớn & Trực Quan -->
+                    <div class="preview-box">
+                        <img id="img-preview" class="preview-img clickable-img" src="" style="display:none;" title="Bấm để xem ảnh phóng to" onclick="if(this.src) viewImage(this.src, event)" onload="onPreviewSuccess()" onerror="onPreviewError()">
+                        <div id="preview-placeholder" style="text-align: center; color: #9CA3AF; font-size: 13px;">
+                            🖼️ Chưa có hình ảnh<br>
+                            <span style="font-size: 11px; color: #B0B5C0;">Dán link Google Drive hoặc tải ảnh lên để xem trước</span>
+                        </div>
+                        <div id="preview-status" style="font-size: 12px; margin-top: 6px; font-weight: 500;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeProductModal()">Hủy Bỏ</button>
+                <button id="btn-save" class="btn btn-primary" onclick="saveData()">💾 Lưu Dữ Liệu</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL QUÉT MÃ VẠCH CHO ADMIN (ĐỒNG BỘ VỚI VIEW ẢNH & INDEX.HTML) -->
+    <div id="adminScannerModal" class="modal-overlay" style="z-index: 10001; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(5px);" onclick="if(event.target === this) closeAdminScanner()">
+        <span class="close-modal" onclick="closeAdminScanner()" title="Đóng máy quét">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" width="22" height="22">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+        </span>
+        <div class="modal-content" style="max-width: 480px; text-align: center; padding: 24px; border-radius: 20px;" onclick="event.stopPropagation()">
+            <h3 style="margin: 0 0 16px 0; color: #111827; font-size: 18px; font-weight: 700;">📷 Quét Mã Vạch / QR</h3>
+            <div id="admin-reader" style="width: 100%; border-radius: 12px; overflow: hidden; background: #000;"></div>
+
+            <!-- Mẹo quét mã vạch -->
+            <div style="margin-top: 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px 14px; text-align: left; font-size: 13px; color: #475569; line-height: 1.5;">
+                <div style="font-weight: 700; color: #1e293b; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+                    <span>💡 Mẹo quét mã nhanh & chuẩn:</span>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 4px;">
+                    <div>• <b>Khoảng cách:</b> Giữ camera cách mã khoảng <b>15 - 20 cm</b>.</div>
+                    <div>• <b>Ánh sáng:</b> Đảm bảo đủ sáng, tránh bóng tối hoặc bị lóa đèn.</div>
+                    <div>• <b>Góc độ:</b> Đặt mã vạch <b>thẳng ngang</b> trong khung quét.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ảnh gốc ẩn dành riêng cho Viewer.js và Quét file ảnh -->
+    <img id="hidden-image-viewer" style="display: none;" src="">
+    <div id="admin-file-scanner-temp" style="display: none;"></div>
 
     <script>
-        // --- CONFIG ---
+        // --- 1. CONFIG & INITIALIZATION ---
         const SUPABASE_URL = 'https://gpmuckoydhrokpioltem.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdwbXVja295ZGhyb2twaW9sdGVtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU3MTMzNTcsImV4cCI6MjA4MTI4OTM1N30.Fqe5U2hm_fERI6ZLc_FQ1SMh5F4sYOrxr8JqLlwLKI0';
         const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         let inventoryList = [];
 
-        // --- AUTH ---
+        // --- 2. AUTHENTICATION ---
         async function checkSession() {
             const { data: { session } } = await db.auth.getSession();
-            if (session) { showAdminPanel(); loadData(); }
+            if (session) { 
+                showAdminPanel(); 
+                loadData(); 
+            }
         }
         checkSession();
 
-        // Bắt phím Enter
         ['email', 'password'].forEach(id => {
             document.getElementById(id).addEventListener("keypress", e => {
                 if (e.key === "Enter") { e.preventDefault(); handleLogin(); }
             });
         });
 
-        // --- UTILS: HÀM KHÓA NÚT (MỚI) ---
-        function setLoading(btnId, isLoading, text = "Lưu Dữ Liệu") {
-            const btn = document.getElementById(btnId);
-            if (isLoading) {
-                btn.disabled = true;
-                btn.innerHTML = `⏳ Đang xử lý...`;
-                btn.style.opacity = "0.7";
-            } else {
-                btn.disabled = false;
-                btn.innerHTML = text;
-                btn.style.opacity = "1";
-            }
-        }
-
         async function handleLogin() {
-            const email = document.getElementById('email').value;
+            const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
             const msg = document.getElementById('msg');
-            const btnLogin = document.querySelector('.login-card button'); // Lấy nút đăng nhập
+            const btnLogin = document.querySelector('.login-card button');
 
-            if(!email || !password) { msg.innerText = "⚠️ Vui lòng điền đủ thông tin"; return; }
+            if(!email || !password) { 
+                msg.innerText = "⚠️ Vui lòng điền đủ email và mật khẩu"; 
+                return; 
+            }
 
-            // Hiệu ứng loading nút đăng nhập
             btnLogin.disabled = true;
-            btnLogin.innerText = "Đang kiểm tra...";
+            btnLogin.innerHTML = `<span class="btn-spinner"></span> Đang kiểm tra...`;
             msg.innerText = "";
 
             const { error } = await db.auth.signInWithPassword({ email, password });
             
             if (error) {
-                msg.innerText = "❌ Email hoặc mật khẩu không đúng";
+                msg.innerText = "❌ Email hoặc mật khẩu không đúng!";
                 btnLogin.disabled = false;
                 btnLogin.innerText = "Đăng Nhập";
             } else { 
@@ -289,67 +863,823 @@
             }
         }
 
-        async function handleLogout() { await db.auth.signOut(); location.reload(); }
-        function showAdminPanel() { document.getElementById('loginForm').style.display = 'none'; document.getElementById('adminPanel').style.display = 'block'; }
+        async function handleLogout() { 
+            await db.auth.signOut(); 
+            location.reload(); 
+        }
+
+        function showAdminPanel() { 
+            document.getElementById('loginForm').style.display = 'none'; 
+            document.getElementById('adminPanel').style.display = 'block'; 
+        }
+
+        // --- 3. IMAGE URL RESOLVER & PREVIEW ---
+        function getImageUrl(hinh) {
+            if (!hinh || typeof hinh !== 'string' || !hinh.trim()) return '';
+            const str = hinh.trim();
+            
+            // Nếu là URL hoàn chỉnh
+            if (str.startsWith('http://') || str.startsWith('https://')) {
+                // Xử lý link Google Drive (các định dạng /file/d/ID, ?id=ID, open?id=ID, uc?id=ID)
+                if (str.includes('drive.google.com')) {
+                    let fileId = '';
+                    const matchFile = str.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+                    if (matchFile && matchFile[1]) {
+                        fileId = matchFile[1];
+                    } else {
+                        const matchId = str.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+                        if (matchId && matchId[1]) {
+                            fileId = matchId[1];
+                        }
+                    }
+                    if (fileId) {
+                        return `https://lh3.googleusercontent.com/d/${fileId}`;
+                    }
+                }
+                return str;
+            }
+            
+            // Nếu là tên file cục bộ trong thư mục images
+            return `images/${str}`;
+        }
+
+        function previewAdminImage(val) {
+            const preview = document.getElementById('img-preview');
+            const placeholder = document.getElementById('preview-placeholder');
+            const status = document.getElementById('preview-status');
+            
+            if (!val || !val.trim()) {
+                preview.style.display = 'none';
+                preview.src = '';
+                placeholder.style.display = 'block';
+                status.innerHTML = '';
+                return;
+            }
+
+            const src = getImageUrl(val.trim());
+            status.innerHTML = '<span style="color: #6B7280;">⏳ Đang tải ảnh xem trước...</span>';
+            placeholder.style.display = 'none';
+            preview.src = src;
+            preview.style.display = 'block';
+        }
+
+        function onPreviewSuccess() {
+            const status = document.getElementById('preview-status');
+            status.innerHTML = '<span style="color: #059669;">✅ Ảnh tải thành công</span>';
+        }
+
+        function onPreviewError() {
+            const status = document.getElementById('preview-status');
+            const preview = document.getElementById('img-preview');
+            preview.style.display = 'none';
+            document.getElementById('preview-placeholder').style.display = 'block';
+            status.innerHTML = '<span style="color: #DC2626;">❌ Không tải được ảnh (Hãy kiểm tra link hoặc quyền chia sẻ Google Drive)</span>';
+        }
+
+        // --- VIEWER.JS XỬ LÝ XEM ẢNH ---
+        let imageViewer = null;
+        let defaultRatio = 0;
+        let defaultX = 0;
+        let defaultY = 0;
+        let isClosing = false;
+
+        function snapToCenter(e) {
+            if (isClosing || !imageViewer || !imageViewer.imageData) return;
+            if (e && e.target && e.target.tagName.toLowerCase() !== 'img') return;
+            if (imageViewer.imageData.ratio <= defaultRatio + 0.01) {
+                let currentX = imageViewer.imageData.x;
+                let currentY = imageViewer.imageData.y;
+                if (Math.abs(currentX - defaultX) > 1 || Math.abs(currentY - defaultY) > 1) {
+                    imageViewer.moveTo(defaultX, defaultY);
+                }
+            }
+        }
+
+        function viewImage(src, event) {
+            if (event) event.stopPropagation();
+            if (!src) return;
+
+            const imgEl = document.getElementById("hidden-image-viewer");
+            imgEl.src = src;
+
+            if (imageViewer) {
+                imageViewer.destroy();
+            }
+
+            isClosing = false;
+
+            imageViewer = new Viewer(imgEl, {
+                toolbar: false,       
+                navbar: false,        
+                title: false,         
+                button: true,         
+                backdrop: true,       
+                transition: true,     
+                zoomRatio: 0.3,
+                
+                viewed: function () {
+                    imageViewer.options.minZoomRatio = imageViewer.imageData.ratio;
+                    defaultRatio = imageViewer.imageData.ratio;
+                    defaultX = imageViewer.imageData.x;
+                    defaultY = imageViewer.imageData.y;
+
+                    imageViewer.viewer.addEventListener('touchend', snapToCenter);
+                    imageViewer.viewer.addEventListener('mouseup', snapToCenter);
+                },
+                
+                hide: function () {
+                    isClosing = true;
+                },
+                
+                hidden: function () {
+                    if (imageViewer && imageViewer.viewer) {
+                        imageViewer.viewer.removeEventListener('touchend', snapToCenter);
+                        imageViewer.viewer.removeEventListener('mouseup', snapToCenter);
+                    }
+                    imageViewer.destroy(); 
+                    imageViewer = null;
+                }
+            });
+            
+            imageViewer.show();
+        }
+
+        function switchImageTab(tab) {
+            const linkBtn = document.getElementById('tab-link-btn');
+            const uploadBtn = document.getElementById('tab-upload-btn');
+            const linkContent = document.getElementById('tab-link-content');
+            const uploadContent = document.getElementById('tab-upload-content');
+
+            if (tab === 'link') {
+                linkBtn.classList.add('active');
+                uploadBtn.classList.remove('active');
+                linkContent.style.display = 'block';
+                uploadContent.style.display = 'none';
+            } else {
+                uploadBtn.classList.add('active');
+                linkBtn.classList.remove('active');
+                linkContent.style.display = 'none';
+                uploadContent.style.display = 'block';
+            }
+        }
+
+        async function handleImageUpload(input) {
+            if (!input.files || !input.files[0]) return;
+            const file = input.files[0];
+            const statusEl = document.getElementById('upload-status');
+            statusEl.innerText = "⏳ Đang tải ảnh lên máy chủ...";
+
+            try {
+                const ext = file.name.split('.').pop();
+                const fileName = `img_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${ext}`;
+                const filePath = `products/${fileName}`;
+
+                const { data, error } = await db.storage.from('product-images').upload(filePath, file, {
+                    cacheControl: '3600',
+                    upsert: false
+                });
+
+                if (error) throw error;
+
+                const { data: { publicUrl } } = db.storage.from('product-images').getPublicUrl(filePath);
+                document.getElementById('inp-hinh').value = publicUrl;
+                previewAdminImage(publicUrl);
+                statusEl.innerText = "✅ Đã tải ảnh lên thành công!";
+            } catch (err) {
+                statusEl.innerHTML = `<span style="color:red">⚠️ ${err.message}</span><br><small>Nếu chưa tạo Bucket trên Supabase, bạn có thể dùng tab Dán link Google Drive.</small>`;
+            } finally {
+                input.value = "";
+            }
+        }
+
+        // --- 4. BARCODE SCANNER CHO ADMIN ---
+        let adminScanner = null;
+        let adminFileScanner = null;
+        let adminScannerTarget = 'inp-barcode'; // 'inp-barcode' hoặc 'search'
+
+        async function openAdminScanner(target = 'inp-barcode') {
+            adminScannerTarget = target;
+            document.getElementById("adminScannerModal").style.display = "flex";
+            
+            if (!adminScanner) {
+                adminScanner = new Html5Qrcode("admin-reader");
+            }
+
+            try {
+                if (!adminScanner.isScanning) {
+                    await adminScanner.start(
+                        { facingMode: "environment" }, 
+                        { fps: 10, qrbox: { width: 220, height: 220 } },
+                        (decodedText) => {
+                            closeAdminScanner();
+                            handleAdminScannedCode(decodedText);
+                        },
+                        (err) => {}
+                    );
+                }
+            } catch (err) {
+                console.warn("Lỗi mở camera admin:", err);
+                document.getElementById("adminScannerModal").style.display = "none";
+                Swal.fire('Lỗi Camera', 'Vui lòng cấp quyền camera hoặc dùng nút "Chọn ảnh từ thiết bị"!', 'warning');
+            }
+        }
+
+        function handleAdminScannedCode(decodedText) {
+            if (!decodedText) return;
+            if (adminScannerTarget === 'search') {
+                const searchInput = document.getElementById("adminSearchInput");
+                if (searchInput) {
+                    searchInput.value = decodedText;
+                    toggleAdminClear();
+                    filterAndSearchData();
+                }
+            } else {
+                const barcodeInput = document.getElementById("inp-barcode");
+                if (barcodeInput) barcodeInput.value = decodedText;
+            }
+            Swal.fire({
+                title: 'Đã quét mã thành công!',
+                text: decodedText,
+                icon: 'success',
+                timer: 1500,
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false
+            });
+        }
+
+        async function closeAdminScanner() {
+            document.getElementById("adminScannerModal").style.display = "none";
+            if (adminScanner) {
+                try {
+                    if (adminScanner.isScanning) {
+                        await adminScanner.stop();
+                    }
+                } catch (err) {
+                    console.warn("Lỗi đóng camera admin:", err);
+                }
+            }
+        }
+
+        // --- XỬ LÝ QUÉT MÃ TỪ TỆP ẢNH TRONG ADMIN (ĐA NỀN TẢNG: NATIVE + QUAGGA2 + ZXING + HTML5-QRCODE) ---
+        let adminZxingReader = null;
+
+        function getAdminZXingReader() {
+            if (!adminZxingReader && window.ZXing) {
+                try {
+                    const hints = new Map();
+                    hints.set(ZXing.DecodeHintType.TRY_HARDER, true);
+                    hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, [
+                        ZXing.BarcodeFormat.QR_CODE,
+                        ZXing.BarcodeFormat.EAN_13,
+                        ZXing.BarcodeFormat.EAN_8,
+                        ZXing.BarcodeFormat.CODE_128,
+                        ZXing.BarcodeFormat.CODE_39,
+                        ZXing.BarcodeFormat.CODE_93,
+                        ZXing.BarcodeFormat.UPC_A,
+                        ZXing.BarcodeFormat.UPC_E,
+                        ZXing.BarcodeFormat.ITF,
+                        ZXing.BarcodeFormat.CODABAR,
+                        ZXing.BarcodeFormat.DATA_MATRIX
+                    ]);
+                    adminZxingReader = new ZXing.BrowserMultiFormatReader(hints);
+                } catch (e) {
+                    console.warn("Admin ZXing init:", e);
+                }
+            }
+            return adminZxingReader;
+        }
+
+        function decodeWithAdminQuagga(imageSrc) {
+            return new Promise((resolve) => {
+                if (typeof Quagga === 'undefined') return resolve(null);
+                try {
+                    Quagga.decodeSingle({
+                        src: imageSrc,
+                        numOfWorkers: 0,
+                        inputStream: { size: 1200 },
+                        locator: { patchSize: "medium", halfSample: true },
+                        decoder: {
+                            readers: [
+                                "ean_reader", "ean_8_reader", "code_128_reader",
+                                "code_39_reader", "code_39_vin_reader", "upc_reader",
+                                "upc_e_reader", "codabar_reader", "i2of5_reader", "2of5_reader"
+                            ]
+                        },
+                        locate: true
+                    }, function(result) {
+                        if (result && result.codeResult && result.codeResult.code) {
+                            resolve(result.codeResult.code);
+                        } else {
+                            resolve(null);
+                        }
+                    });
+                } catch (e) {
+                    resolve(null);
+                }
+            });
+        }
+
+        async function decodeWithAdminZXing(element) {
+            const reader = getAdminZXingReader();
+            if (!reader) return null;
+            try {
+                if (element instanceof HTMLCanvasElement) {
+                    if (typeof reader.decodeFromCanvas === 'function') {
+                        const res = await reader.decodeFromCanvas(element);
+                        if (res && res.getText()) return res.getText();
+                    }
+                    const dataUrl = element.toDataURL('image/jpeg', 0.95);
+                    const res = await reader.decodeFromImageUrl(dataUrl);
+                    if (res && res.getText()) return res.getText();
+                } else if (element instanceof HTMLImageElement) {
+                    const res = await reader.decodeFromImageElement(element);
+                    if (res && res.getText()) return res.getText();
+                }
+            } catch (e) {}
+            return null;
+        }
+
+        // --- CÁC HÀM XỬ LÝ ẢNH CHUYÊN SÂU CHO ADMIN: AUTO-CROP & TĂNG TƯƠNG PHẢN ---
+        function getAdminCropRegions(img) {
+            const w = img.naturalWidth || img.width || 800;
+            const h = img.naturalHeight || img.height || 600;
+            return [
+                { name: "Toàn bộ", sx: 0, sy: 0, sw: w, sh: h },
+                { name: "Trung tâm", sx: w * 0.15, sy: h * 0.15, sw: w * 0.7, sh: h * 0.7 },
+                { name: "Dải ngang giữa", sx: w * 0.05, sy: h * 0.25, sw: w * 0.9, sh: h * 0.5 },
+                { name: "Dải dưới", sx: w * 0.05, sy: h * 0.5, sw: w * 0.9, sh: h * 0.45 },
+                { name: "Dải trên", sx: w * 0.05, sy: h * 0.05, sw: w * 0.9, sh: h * 0.45 }
+            ];
+        }
+
+        function createAdminRegionCanvas(img, region, angle = 0, maxDim = 1000) {
+            let sw = region.sw;
+            let sh = region.sh;
+            let dw = sw;
+            let dh = sh;
+            if (dw > maxDim || dh > maxDim) {
+                if (dw > dh) { dh = Math.round((dh * maxDim) / dw); dw = maxDim; }
+                else { dw = Math.round((dw * maxDim) / dh); dh = maxDim; }
+            }
+            dw = Math.max(1, Math.floor(dw));
+            dh = Math.max(1, Math.floor(dh));
+
+            const canvas = document.createElement('canvas');
+            if (angle === 90 || angle === 270) {
+                canvas.width = dh;
+                canvas.height = dw;
+            } else {
+                canvas.width = dw;
+                canvas.height = dh;
+            }
+
+            const ctx = canvas.getContext('2d');
+            ctx.translate(canvas.width / 2, canvas.height / 2);
+            ctx.rotate((angle * Math.PI) / 180);
+            ctx.drawImage(img, region.sx, region.sy, region.sw, region.sh, -dw / 2, -dh / 2, dw, dh);
+            return canvas;
+        }
+
+        function applyAdminContrastStretch(canvas) {
+            const ctx = canvas.getContext('2d');
+            const w = canvas.width;
+            const h = canvas.height;
+            const imgData = ctx.getImageData(0, 0, w, h);
+            const d = imgData.data;
+            let min = 255, max = 0;
+            for (let i = 0; i < d.length; i += 4) {
+                const lum = (d[i] * 0.299 + d[i+1] * 0.587 + d[i+2] * 0.114);
+                if (lum < min) min = lum;
+                if (lum > max) max = lum;
+            }
+            const range = max - min || 1;
+            for (let i = 0; i < d.length; i += 4) {
+                const lum = (d[i] * 0.299 + d[i+1] * 0.587 + d[i+2] * 0.114);
+                const val = Math.min(255, Math.max(0, ((lum - min) / range) * 255));
+                d[i] = val;
+                d[i+1] = val;
+                d[i+2] = val;
+            }
+            ctx.putImageData(imgData, 0, 0);
+        }
+
+        function applyAdminAdaptiveBinarization(canvas) {
+            const ctx = canvas.getContext('2d');
+            const w = canvas.width;
+            const h = canvas.height;
+            const imgData = ctx.getImageData(0, 0, w, h);
+            const d = imgData.data;
+            for (let i = 0; i < d.length; i += 4) {
+                const lum = (d[i] * 0.299 + d[i+1] * 0.587 + d[i+2] * 0.114);
+                const val = lum < 140 ? 0 : 255;
+                d[i] = val;
+                d[i+1] = val;
+                d[i+2] = val;
+            }
+            ctx.putImageData(imgData, 0, 0);
+        }
+
+        async function decodeAdminBarcodeFromFile(file) {
+            const objectUrl = URL.createObjectURL(file);
+
+            // 1. Quét nhanh bằng BarcodeDetector (nếu hỗ trợ)
+            if ('BarcodeDetector' in window) {
+                try {
+                    const formats = await BarcodeDetector.getSupportedFormats();
+                    const detector = new BarcodeDetector({ formats: formats && formats.length ? formats : ['qr_code', 'ean_13', 'ean_8', 'code_128', 'code_39', 'upc_a', 'upc_e', 'itf'] });
+                    const imageBitmap = await createImageBitmap(file);
+                    const barcodes = await detector.detect(imageBitmap);
+                    if (barcodes && barcodes.length > 0 && barcodes[0].rawValue) {
+                        URL.revokeObjectURL(objectUrl);
+                        return barcodes[0].rawValue;
+                    }
+                } catch (e) {}
+            }
+
+            // 2. Quét nhanh bằng Quagga2 trên ảnh gốc
+            const quaggaDirect = await decodeWithAdminQuagga(objectUrl);
+            if (quaggaDirect) {
+                URL.revokeObjectURL(objectUrl);
+                return quaggaDirect;
+            }
+
+            // 3. Load HTMLImageElement
+            const img = await new Promise((resolve, reject) => {
+                const i = new Image();
+                i.onload = () => resolve(i);
+                i.onerror = (e) => reject(e);
+                i.src = objectUrl;
+            });
+
+            // Quét nhanh bằng ZXing trên ảnh gốc
+            const directZXing = await decodeWithAdminZXing(img);
+            if (directZXing) {
+                URL.revokeObjectURL(objectUrl);
+                return directZXing;
+            }
+
+            // Khởi tạo html5-qrcode dự phòng
+            if (!adminFileScanner) {
+                const allFormats = window.Html5QrcodeSupportedFormats ? Object.values(window.Html5QrcodeSupportedFormats) : undefined;
+                adminFileScanner = new Html5Qrcode("admin-file-scanner-temp", {
+                    formatsToSupport: allFormats,
+                    verbose: false
+                });
+            }
+
+            // 4. Thuật toán Auto-Crop thông minh (5 vùng) x 4 góc xoay (0°, 90°, 270°, 180°)
+            const regions = getAdminCropRegions(img);
+            const angles = [0, 90, 270, 180];
+
+            for (let region of regions) {
+                for (let angle of angles) {
+                    // Bản gốc cắt theo vùng
+                    const canvas = createAdminRegionCanvas(img, region, angle, 1000);
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+
+                    let res = await decodeWithAdminQuagga(dataUrl) || await decodeWithAdminZXing(canvas);
+                    if (res) { URL.revokeObjectURL(objectUrl); return res; }
+
+                    // Thử tăng tương phản (Contrast Stretch)
+                    applyAdminContrastStretch(canvas);
+                    const contrastDataUrl = canvas.toDataURL('image/jpeg', 0.95);
+                    res = await decodeWithAdminQuagga(contrastDataUrl) || await decodeWithAdminZXing(canvas);
+                    if (res) { URL.revokeObjectURL(objectUrl); return res; }
+
+                    // Thử nhị phân hóa (Adaptive Binarization)
+                    applyAdminAdaptiveBinarization(canvas);
+                    const binarizedDataUrl = canvas.toDataURL('image/jpeg', 0.95);
+                    res = await decodeWithAdminQuagga(binarizedDataUrl) || await decodeWithAdminZXing(canvas);
+                    if (res) { URL.revokeObjectURL(objectUrl); return res; }
+                }
+            }
+
+            URL.revokeObjectURL(objectUrl);
+            throw new Error("No barcode detected");
+        }
+
+        async function scanAdminImageFile(input) {
+            if (!input.files || !input.files[0]) return;
+            const file = input.files[0];
+
+            Swal.fire({
+                title: 'Đang đọc mã từ ảnh...',
+                text: 'Hệ thống đang phân tích mã vạch...',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            try {
+                const decodedText = await decodeAdminBarcodeFromFile(file);
+                if (!decodedText) throw new Error("No barcode detected");
+
+                await closeAdminScanner();
+                handleAdminScannedCode(decodedText);
+            } catch (err) {
+                console.warn("Lỗi quét ảnh admin:", err);
+                Swal.fire('Không tìm thấy mã', 'Hình ảnh bạn chọn không chứa mã vạch hoặc mã QR rõ ràng. Vui lòng thử lại với ảnh chụp rõ nét và đủ sáng hơn!', 'warning');
+            } finally {
+                input.value = "";
+            }
+        }
+
+        // --- 5. MODAL QUẢN LÝ SẢN PHẨM (THÊM / SỬA) ---
+        function openProductModal(id = null) {
+            const modal = document.getElementById('productModal');
+            const title = document.getElementById('modal-title');
+            const saveBtn = document.getElementById('btn-save');
+            
+            resetModalForm();
+
+            if (id) {
+                const item = inventoryList.find(i => i.id === id);
+                if (!item) return;
+                title.innerText = `✏️ Chỉnh Sửa Sản Phẩm (#${id})`;
+                saveBtn.innerText = "💾 Cập Nhật";
+                
+                document.getElementById('inp-id').value = item.id;
+                document.getElementById('inp-barcode').value = item.barcode || '';
+                document.getElementById('inp-loai').value = item.loai_tu || '';
+                document.getElementById('inp-ten').value = item.ten_mau || '';
+                document.getElementById('inp-ton').value = item.ton_kho ?? 0;
+                document.getElementById('inp-hinh').value = item.hinh || '';
+                previewAdminImage(item.hinh || '');
+            } else {
+                title.innerText = "✨ Thêm Sản Phẩm Mới";
+                saveBtn.innerText = "💾 Lưu Sản Phẩm";
+            }
+
+            modal.style.display = 'flex';
+            setTimeout(() => document.getElementById('inp-barcode').focus(), 100);
+        }
+
+        function closeProductModal() {
+            document.getElementById('productModal').style.display = 'none';
+        }
+
+        function resetModalForm() {
+            ['inp-id', 'inp-barcode', 'inp-loai', 'inp-ten', 'inp-ton', 'inp-hinh'].forEach(id => {
+                document.getElementById(id).value = '';
+            });
+            document.getElementById('upload-status').innerText = '';
+            switchImageTab('link');
+            previewAdminImage('');
+        }
+
+        // --- 6. DATA HANDLING (CRUD & DASHBOARD LOGIC) ---
+        let currentAdminFilter = 'all'; // 'all', 'in_stock', 'low_stock', 'out_of_stock'
+
+        function setAdminFilter(type) {
+            currentAdminFilter = type;
+            document.querySelectorAll('.filter-pill').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.filter === type);
+            });
+            filterAndSearchData();
+        }
+
+        function filterAndSearchData() {
+            const keyword = (document.getElementById("adminSearchInput") ? document.getElementById("adminSearchInput").value : '').toLowerCase().trim();
+            const selectedCat = (document.getElementById("categoryFilter") ? document.getElementById("categoryFilter").value : '');
+
+            const filtered = inventoryList.filter(item => {
+                // Lọc theo từ khóa
+                const matchSearch = `${item.barcode || ''} ${item.ten_mau || ''} ${item.loai_tu || ''}`.toLowerCase().includes(keyword);
+                if (!matchSearch) return false;
+
+                // Lọc theo danh mục
+                if (selectedCat && (item.loai_tu || '') !== selectedCat) return false;
+
+                // Lọc theo trạng thái tồn kho
+                const stock = parseInt(item.ton_kho || 0);
+                if (currentAdminFilter === 'in_stock') return stock > 10;
+                if (currentAdminFilter === 'low_stock') return stock > 0 && stock <= 10;
+                if (currentAdminFilter === 'out_of_stock') return stock <= 0;
+
+                return true;
+            });
+
+            renderTable(filtered);
+        }
 
         function updateStats(data) {
-            document.getElementById('stat-total').innerText = data.length;
-            const outOfStock = data.filter(item => item.ton_kho <= 0).length;
-            document.getElementById('stat-out').innerText = outOfStock;
+            const totalModels = data.length;
+            const totalStock = data.reduce((sum, item) => sum + parseInt(item.ton_kho || 0), 0);
+            const categories = Array.from(new Set(data.map(i => i.loai_tu).filter(Boolean))).sort();
+            const lowOrOutStock = data.filter(item => parseInt(item.ton_kho || 0) <= 3).length;
+
+            const elTotal = document.getElementById('stat-total');
+            const elStock = document.getElementById('stat-total-stock');
+            const elCats = document.getElementById('stat-categories');
+            const elOut = document.getElementById('stat-out');
+            const elOutSub = document.getElementById('stat-out-sub');
+
+            if (elTotal) elTotal.innerText = `${totalModels} mẫu`;
+            if (elStock) elStock.innerText = `${totalStock.toLocaleString('vi-VN')} cái`;
+            if (elCats) elCats.innerText = `${categories.length} loại`;
+            if (elOut) elOut.innerText = `${lowOrOutStock} mẫu`;
+            if (elOutSub) elOutSub.innerText = lowOrOutStock > 0 ? `Cần bổ sung ngay` : `Tồn kho ổn định`;
+
+            // Cập nhật dropdown bộ lọc loại tủ
+            const catSelect = document.getElementById('categoryFilter');
+            if (catSelect) {
+                const currentVal = catSelect.value;
+                let optHtml = `<option value="">🗄️ Tất cả phân loại (${categories.length})</option>`;
+                categories.forEach(cat => {
+                    const count = data.filter(i => i.loai_tu === cat).length;
+                    optHtml += `<option value="${cat}">${cat} (${count})</option>`;
+                });
+                catSelect.innerHTML = optHtml;
+                catSelect.value = currentVal;
+            }
+
+            // Cập nhật datalist gợi ý khi thêm/sửa
+            const datalist = document.getElementById('categoryList');
+            if (datalist) {
+                datalist.innerHTML = categories.map(cat => `<option value="${cat}">`).join('');
+            }
+        }
+
+        function copyBarcode(barcode, e) {
+            if (e) e.stopPropagation();
+            if (!barcode || barcode === '-') return;
+            navigator.clipboard.writeText(barcode).then(() => {
+                Swal.fire({
+                    title: 'Đã sao chép barcode!',
+                    text: barcode,
+                    icon: 'success',
+                    timer: 1200,
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false
+                });
+            }).catch(() => {});
+        }
+
+        function exportToCSV() {
+            if (!inventoryList || inventoryList.length === 0) {
+                return Swal.fire('Thông báo', 'Không có dữ liệu tồn kho để xuất file!', 'info');
+            }
+            let csvContent = "\uFEFF"; // UTF-8 BOM cho Excel hiển thị chuẩn tiếng Việt
+            csvContent += "ID,Mã Barcode,Phân Loại Tủ,Tên Mẫu Mã,Tồn Kho,Link Hình Ảnh\n";
+            inventoryList.forEach(item => {
+                let row = [
+                    item.id || '',
+                    `"${(item.barcode || '').replace(/"/g, '""')}"`,
+                    `"${(item.loai_tu || '').replace(/"/g, '""')}"`,
+                    `"${(item.ten_mau || '').replace(/"/g, '""')}"`,
+                    item.ton_kho ?? 0,
+                    `"${(item.hinh || '').replace(/"/g, '""')}"`
+                ];
+                csvContent += row.join(",") + "\n";
+            });
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", `TonKho_Admin_${new Date().toISOString().slice(0, 10)}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            Swal.fire({
+                title: 'Xuất file thành công!',
+                text: 'Đã tải xuống file CSV danh sách tồn kho.',
+                icon: 'success',
+                timer: 1600,
+                showConfirmButton: false
+            });
+        }
+
+        function renderAdminSkeleton() {
+            const tbody = document.getElementById('table-body');
+            if (window.innerWidth <= 768) {
+                tbody.innerHTML = Array(4).fill(0).map(() => `
+                    <tr>
+                        <td><div class="skeleton" style="width: 84px; height: 84px; border-radius: 10px;"></div></td>
+                        <td class="pc-only-cell"></td>
+                        <td>
+                            <div class="skeleton skeleton-title" style="width: 80%; height: 18px;"></div>
+                            <div class="skeleton skeleton-badge" style="width: 90px; margin-bottom: 4px;"></div>
+                            <div class="skeleton" style="height: 14px; width: 110px; margin-bottom: 6px;"></div>
+                        </td>
+                        <td class="pc-only-cell"></td>
+                        <td>
+                            <div style="position: absolute; bottom: 12px; right: 12px; display: flex; gap: 6px;">
+                                <div class="skeleton" style="width: 34px; height: 34px; border-radius: 50%;"></div>
+                                <div class="skeleton" style="width: 34px; height: 34px; border-radius: 50%;"></div>
+                            </div>
+                        </td>
+                    </tr>
+                `).join('');
+            } else {
+                tbody.innerHTML = Array(5).fill(0).map(() => `
+                    <tr>
+                        <td><div class="skeleton" style="width: 68px; height: 68px; border-radius: 10px;"></div></td>
+                        <td class="pc-only-cell"><div class="skeleton" style="height: 24px; width: 110px; border-radius: 6px;"></div></td>
+                        <td>
+                            <div class="skeleton skeleton-title" style="width: 55%; height: 18px;"></div>
+                            <div class="skeleton skeleton-badge" style="width: 85px;"></div>
+                        </td>
+                        <td><div class="skeleton skeleton-badge" style="width: 110px; height: 26px; border-radius: 20px;"></div></td>
+                        <td style="text-align:center">
+                            <div class="skeleton" style="width: 78px; height: 36px; border-radius: 20px; margin: 0 auto;"></div>
+                        </td>
+                    </tr>
+                `).join('');
+            }
         }
 
         async function loadData() {
-            const tbody = document.getElementById('table-body');
-            // Giữ lại khung nhưng hiện loading
-            if(inventoryList.length === 0) tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:30px; color:#6B7280">⏳ Đang tải dữ liệu...</td></tr>';
+            if(inventoryList.length === 0) {
+                renderAdminSkeleton();
+            }
             
             let { data, error } = await db.from('inventory').select('*').order('id', { ascending: false });
             
-            if (!error) { 
+            if (!error && data) { 
                 inventoryList = data; 
                 updateStats(data);
-                renderTable(data); 
+                filterAndSearchData(); 
+            } else if (error) {
+                const tbody = document.getElementById('table-body');
+                if (tbody) {
+                    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:30px; color:red">❌ Lỗi tải dữ liệu: ${error.message}</td></tr>`;
+                }
             }
         }
 
         function renderTable(data) {
             const tbody = document.getElementById('table-body');
+            const counter = document.getElementById('items-counter-badge');
+            if (counter) counter.innerText = `${data.length} sản phẩm`;
+
             tbody.innerHTML = '';
             if (data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:30px; color:#6B7280">Chưa có dữ liệu.</td></tr>';
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" style="text-align:center; padding:50px 20px; color:#64748B;">
+                            <div style="font-size: 36px; margin-bottom: 8px;">📦</div>
+                            <div style="font-size: 15px; font-weight: 700; color: #0F172A;">Không tìm thấy sản phẩm nào phù hợp</div>
+                            <div style="font-size: 13px; color: #94A3B8; margin-top: 4px;">Hãy thử tìm kiếm với từ khóa khác hoặc xóa bộ lọc</div>
+                        </td>
+                    </tr>`;
                 return;
             }
+            
             data.forEach(item => {
+                let imgSrc = getImageUrl(item.hinh);
+                let safeImgSrc = imgSrc.replace(/'/g, "\\'");
                 let imgHtml = item.hinh ? 
-                    `<img src="images/${item.hinh}" class="thumb-admin" onerror="this.onerror=null;this.src='https://placehold.co/70x70?text=No+Img';">` : 
-                    `<img src="https://placehold.co/70x70?text=No+Img" class="thumb-admin">`;
+                    `<img src="${imgSrc}" class="thumb-admin clickable-img" loading="lazy" onclick="viewImage('${safeImgSrc}', event)" title="Bấm để xem ảnh phóng to" onerror="this.onerror=null;this.src='https://placehold.co/80x80?text=No+Img';">` : 
+                    `<div class="thumb-admin" style="display:flex; align-items:center; justify-content:center; color:#94A3B8; font-size:20px;">📦</div>`;
                 
-                let badgeClass = item.ton_kho > 0 ? 'bg-green' : 'bg-red';
-                let badgeIcon = item.ton_kho > 0 ? '✅' : '⚠️';
-                let badgeText = item.ton_kho > 0 ? 'Sẵn hàng' : 'Hết hàng';
+                let stock = parseInt(item.ton_kho || 0);
+                let badgeClass = stock > 10 ? 'bg-green' : (stock > 3 ? 'bg-yellow' : 'bg-red');
+                let badgeIcon = stock > 10 ? '✅' : (stock > 3 ? '⚡' : '⚠️');
+                let badgeText = stock > 10 ? 'Sẵn hàng' : (stock > 0 ? 'Sắp hết' : 'Hết hàng');
+
+                let barcodeSafe = (item.barcode || '').replace(/'/g, "\\'");
 
                 let row = `
 					<tr>
 						<td>${imgHtml}</td>
-						<td class="pc-only-cell"><span class="pc-barcode">${item.barcode}</span></td>
+						<td class="pc-only-cell">
+                            <span class="pc-barcode" onclick="copyBarcode('${barcodeSafe}', event)" title="Bấm để sao chép mã">
+                                <span>${item.barcode || '-'}</span>
+                                <span style="font-size: 11px; opacity: 0.6;">📋</span>
+                            </span>
+                        </td>
 						<td>
-							<div class="item-name">${item.ten_mau}</div>
-							<div class="item-cat" style="display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; background: #F3F4F6; color: #4B5563; border: 1px solid #E5E7EB;">${item.loai_tu || '-'}</div>
-							<div class="mobile-only mobile-barcode">${item.barcode}</div>
-						</td>
-						<td>
-							<div style="display:flex; align-items:center;">
-								<span class="stock-num">
-									<span class="mobile-only" style="font-weight:normal; font-size: 0.9em; color: #666;">Tồn kho: </span> ${item.ton_kho}
+							<div class="item-name">${item.ten_mau || 'Chưa đặt tên'}</div>
+							<div><span class="item-cat">🗄️ ${item.loai_tu || 'Khác'}</span></div>
+							<div class="mobile-only" style="margin-top: 3px;">
+								<span class="mobile-barcode" onclick="copyBarcode('${barcodeSafe}', event)" title="Bấm để sao chép">${item.barcode || '-'}</span>
+							</div>
+							<div class="mobile-only" style="margin-top: 4px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+								<span class="stock-num" style="font-size: 13px;">
+									<span style="font-weight: normal; color: #64748B;">Tồn: </span>${stock}
 								</span>
-								<span class="badge ${badgeClass}">
-									<span class="mobile-only" style="margin-right:4px">${badgeIcon}</span>${badgeText}
+								<span class="badge ${badgeClass}" style="padding: 2px 8px; font-size: 11px;">
+									<span style="margin-right: 3px;">${badgeIcon}</span>${badgeText}
 								</span>
 							</div>
 						</td>
+						<td class="pc-only-cell">
+							<div style="display:flex; align-items:center; gap: 6px;">
+								<span class="stock-num">${stock}</span>
+								<span class="badge ${badgeClass}">
+                                    <span style="margin-right: 4px;">${badgeIcon}</span>${badgeText}
+                                </span>
+							</div>
+						</td>
 						<td style="text-align:center">
-							<button class="action-btn icon-edit" onclick="editItem(${item.id})">✏️</button>
-							<button class="action-btn icon-trash" onclick="deleteItem(${item.id})">🗑️</button>
+                            <div class="row-actions">
+                                <button class="action-btn icon-edit" title="Chỉnh sửa sản phẩm" onclick="openProductModal(${item.id})">✏️</button>
+                                <button class="action-btn icon-trash" title="Xóa sản phẩm" onclick="deleteItem(${item.id})">🗑️</button>
+                            </div>
 						</td>
 					</tr>
 				`;
@@ -357,81 +1687,110 @@
             });
         }
 
-        function searchData(keyword) {
-            keyword = keyword.toLowerCase();
-            const filtered = inventoryList.filter(i => (i.barcode + i.ten_mau + i.loai_tu).toLowerCase().includes(keyword));
-            renderTable(filtered);
+        // --- XỬ LÝ NÚT XÓA TÌM KIẾM TRONG ADMIN ---
+        function toggleAdminClear() {
+            const input = document.getElementById("adminSearchInput");
+            const clearBtn = document.getElementById("adminClearBtn");
+            if (input && clearBtn) {
+                clearBtn.style.display = input.value.length > 0 ? "flex" : "none";
+            }
+        }
+
+        function clearAdminSearch() {
+            const input = document.getElementById("adminSearchInput");
+            if (input) {
+                input.value = "";
+                toggleAdminClear();
+                filterAndSearchData();
+                input.focus();
+            }
         }
 
         async function saveData() {
             const id = document.getElementById('inp-id').value;
             const barcode = document.getElementById('inp-barcode').value.trim();
             const ten_mau = document.getElementById('inp-ten').value.trim();
-            const ton_kho = parseInt(document.getElementById('inp-ton').value);
+            const loai_tu = document.getElementById('inp-loai').value.trim();
+            const ton_kho_raw = document.getElementById('inp-ton').value;
+            const ton_kho = parseInt(ton_kho_raw);
+            const hinh = document.getElementById('inp-hinh').value.trim();
             
-            // 1. Validate kỹ hơn
-            if (!barcode || !ten_mau) return alert("❌ Vui lòng nhập Barcode và Tên mẫu!");
-            if (isNaN(ton_kho) || ton_kho < 0) return alert("❌ Số lượng tồn kho không hợp lệ (phải >= 0)!");
+            if (!barcode) {
+                return Swal.fire('Thiếu thông tin', 'Vui lòng nhập Mã Vạch (Barcode)!', 'warning');
+            }
+            if (!ten_mau) {
+                return Swal.fire('Thiếu thông tin', 'Vui lòng nhập Tên Mẫu Sản Phẩm!', 'warning');
+            }
+            if (isNaN(ton_kho) || ton_kho < 0) {
+                return Swal.fire('Số lượng không hợp lệ', 'Số lượng tồn kho phải là số lớn hơn hoặc bằng 0!', 'warning');
+            }
 
             const payload = {
                 barcode: barcode,
-                loai_tu: document.getElementById('inp-loai').value.trim(),
+                loai_tu: loai_tu || 'Khác',
                 ten_mau: ten_mau,
                 ton_kho: ton_kho,
-                hinh: document.getElementById('inp-hinh').value.trim()
+                hinh: hinh
             };
 
-            // 2. Hiệu ứng Loading cho nút Lưu (ID nút lưu cần thêm id="btn-save")
-            // Lưu ý: Bạn cần thêm id="btn-save" vào nút Lưu trong HTML ở trên
-            const saveBtn = document.querySelector('.form-actions .btn-primary');
-            const originalText = id ? "💾 Cập Nhật" : "💾 Lưu Dữ Liệu";
-            
+            const saveBtn = document.getElementById('btn-save');
+            const originalText = saveBtn.innerText;
             saveBtn.disabled = true;
-            saveBtn.innerHTML = "⏳ Đang lưu...";
+            saveBtn.innerHTML = `<span class="btn-spinner"></span> Đang lưu...`;
 
-            const task = id ? db.from('inventory').update(payload).eq('id', id) : db.from('inventory').insert([payload]);
-            const { error } = await task;
-            
-            // Trả lại trạng thái nút
-            saveBtn.disabled = false;
-            saveBtn.innerHTML = originalText;
+            try {
+                const task = id ? db.from('inventory').update(payload).eq('id', id) : db.from('inventory').insert([payload]);
+                const { error } = await task;
+                
+                if (error) throw error;
 
-            if (error) alert("Lỗi: " + error.message);
-            else { 
-                // alert(id ? "Đã cập nhật!" : "Đã thêm mới!"); // Có thể bỏ alert nếu muốn mượt hơn
-                resetForm(); 
-                loadData(); 
+                closeProductModal();
+                Swal.fire({
+                    title: 'Thành công!',
+                    text: id ? 'Đã cập nhật sản phẩm thành công!' : 'Đã thêm sản phẩm mới thành công!',
+                    icon: 'success',
+                    timer: 1800,
+                    showConfirmButton: false
+                });
+                
+                loadData();
+            } catch (err) {
+                Swal.fire('Lỗi khi lưu', err.message, 'error');
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.innerText = originalText;
             }
-        }
-
-        function editItem(id) {
-            const item = inventoryList.find(i => i.id === id);
-            document.getElementById('inp-id').value = item.id;
-            document.getElementById('inp-barcode').value = item.barcode;
-            document.getElementById('inp-loai').value = item.loai_tu;
-            document.getElementById('inp-ten').value = item.ten_mau;
-            document.getElementById('inp-ton').value = item.ton_kho;
-            document.getElementById('inp-hinh').value = item.hinh;
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-            document.getElementById('inp-barcode').focus();
         }
 
         async function deleteItem(id) {
-            if(confirm("Bạn chắc chắn muốn xóa sản phẩm này? Hành động này không thể hoàn tác.")) {
-                // Hiệu ứng nhỏ để người dùng biết đang xóa
-                const row = document.querySelector(`button[onclick="deleteItem(${id})"]`).closest('tr');
-                row.style.opacity = "0.3";
-                
-                await db.from('inventory').delete().eq('id', id);
-                loadData();
-            }
-        }
+            const result = await Swal.fire({
+                title: 'Xác nhận xóa?',
+                text: 'Hành động này sẽ xóa hoàn toàn sản phẩm khỏi hệ thống và không thể hoàn tác.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#EF4444',
+                cancelButtonColor: '#9CA3AF',
+                confirmButtonText: 'Xóa vĩnh viễn',
+                cancelButtonText: 'Hủy bỏ'
+            });
 
-        function resetForm() {
-            document.querySelectorAll('.form-grid input').forEach(i => i.value = '');
-            document.getElementById('inp-id').value = '';
-            // Reset nút về trạng thái thêm mới
-            document.querySelector('.form-actions .btn-primary').innerHTML = "💾 Lưu Dữ Liệu";
+            if (result.isConfirmed) {
+                try {
+                    const { error } = await db.from('inventory').delete().eq('id', id);
+                    if (error) throw error;
+
+                    Swal.fire({
+                        title: 'Đã xóa!',
+                        text: 'Sản phẩm đã được xóa khỏi kho.',
+                        icon: 'success',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                    loadData();
+                } catch (err) {
+                    Swal.fire('Lỗi khi xóa', err.message, 'error');
+                }
+            }
         }
     </script>
 </body>
