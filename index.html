@@ -16,6 +16,9 @@
     <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.20.0/umd/index.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@ericblade/quagga2@1.8.4/dist/quagga.min.js"></script>
+    <!-- JsBarcode & QRCode.js để sinh mã vạch và mã QR quét trực tiếp -->
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     
     <style>
         :root {
@@ -531,6 +534,188 @@
             color: var(--primary);
             font-weight: 600;
         }
+
+        /* --- BARCODE GENERATOR MODAL (CHUNG CHO PC & MOBILE) --- */
+        .barcode-modal-box {
+            background: white;
+            border-radius: 20px;
+            width: 92%;
+            max-width: 440px;
+            padding: 22px;
+            text-align: center;
+            animation: zoomIn 0.2s ease-out;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+            position: relative;
+            box-sizing: border-box;
+        }
+        .barcode-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+        }
+        .barcode-modal-header h3 {
+            margin: 0;
+            font-size: 17px;
+            font-weight: 700;
+            color: #0F172A;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .barcode-close-btn {
+            background: #F1F5F9;
+            border: none;
+            border-radius: 50%;
+            width: 34px;
+            height: 34px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #64748B;
+            transition: all 0.2s;
+        }
+        .barcode-close-btn:hover {
+            background: #E2E8F0;
+            color: #0F172A;
+            transform: scale(1.08);
+        }
+        .barcode-prod-card {
+            background: #F8FAFC;
+            border: 1px solid #E2E8F0;
+            border-radius: 12px;
+            padding: 12px;
+            text-align: left;
+            margin-bottom: 14px;
+        }
+        .barcode-prod-name {
+            font-weight: 700;
+            color: #0F172A;
+            font-size: 14px;
+            line-height: 1.35;
+            margin-bottom: 4px;
+        }
+        .barcode-prod-meta {
+            font-size: 12px;
+            color: #64748B;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .barcode-tabs {
+            display: flex;
+            background: #F1F5F9;
+            border-radius: 10px;
+            padding: 4px;
+            gap: 4px;
+            margin-bottom: 14px;
+        }
+        .barcode-tab-btn {
+            flex: 1;
+            border: none;
+            background: transparent;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #64748B;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        .barcode-tab-btn.active {
+            background: white;
+            color: var(--primary);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+        }
+        .barcode-display-wrapper {
+            background: #FFFFFF;
+            border: 2px dashed #CBD5E1;
+            border-radius: 14px;
+            padding: 16px 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 150px;
+            margin-bottom: 12px;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.02);
+        }
+        .barcode-actions-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 14px;
+        }
+        .btn-barcode-action {
+            flex: 1;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-barcode-download {
+            background: var(--primary);
+            color: white;
+            border: none;
+            box-shadow: 0 2px 6px rgba(79, 70, 229, 0.25);
+        }
+        .btn-barcode-download:hover {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+        .btn-barcode-copy {
+            background: #F8FAFC;
+            color: #334155;
+            border: 1px solid #CBD5E1;
+        }
+        .btn-barcode-copy:hover {
+            background: #F1F5F9;
+            border-color: #94A3B8;
+        }
+        .m-barcode-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 3px;
+        }
+        .btn-create-code {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: #EEF2FF;
+            color: var(--primary);
+            border: 1px solid #C7D2FE;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 11.5px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            line-height: 1.2;
+        }
+        .btn-create-code:hover {
+            background: #E0E7FF;
+            border-color: var(--primary);
+            transform: translateY(-1px);
+        }
+        .btn-create-code:active {
+            transform: scale(0.96);
+        }
+        .btn-create-code svg {
+            color: var(--primary);
+            flex-shrink: 0;
+        }
         
         @media (max-width: 768px) {
             .category-groups-container { display: none; }
@@ -702,6 +887,75 @@
                     <div>• <b>Ánh sáng:</b> Đảm bảo đủ sáng, tránh bóng tối hoặc bị lóa đèn.</div>
                     <div>• <b>Góc độ:</b> Đặt mã vạch <b>thẳng ngang</b> trong khung quét.</div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Tạo Mã Quét (Barcode 1D & QR Code 2D) -->
+    <div id="barcodeModal" class="custom-modal" onclick="closeBarcodeModal(event)">
+        <div class="barcode-modal-box" onclick="event.stopPropagation()">
+            <div class="barcode-modal-header">
+                <h3>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--primary);">
+                        <rect x="3" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="14" width="7" height="7"></rect>
+                        <rect x="3" y="14" width="7" height="7"></rect>
+                    </svg>
+                    Mã Quét Sản Phẩm
+                </h3>
+                <button class="barcode-close-btn" onclick="closeBarcodeModal()" title="Đóng">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Thẻ thông tin sản phẩm -->
+            <div class="barcode-prod-card">
+                <div id="modal-barcode-name" class="barcode-prod-name">Tên sản phẩm</div>
+                <div class="barcode-prod-meta">
+                    <span id="modal-barcode-cat" class="badge bg-gray">Loại tủ</span>
+                    <span>•</span>
+                    <span id="modal-barcode-stock" style="font-weight: 600; color: var(--primary);">Tồn: 0</span>
+                    <span>•</span>
+                    <span id="modal-barcode-num" style="font-family: monospace; font-weight: 600; color: #334155;">8935...</span>
+                </div>
+            </div>
+
+            <!-- Bộ chuyển đổi Tab: Mã vạch / Mã QR -->
+            <div class="barcode-tabs">
+                <button id="tab-barcode-btn" class="barcode-tab-btn active" onclick="switchBarcodeTab('barcode')">
+                    📊 Mã vạch (1D)
+                </button>
+                <button id="tab-qrcode-btn" class="barcode-tab-btn" onclick="switchBarcodeTab('qrcode')">
+                    📱 Mã QR (2D)
+                </button>
+            </div>
+
+            <!-- Vùng hiển thị mã tương phản cao để quét trực tiếp -->
+            <div class="barcode-display-wrapper">
+                <div id="barcode-display-pane" style="width: 100%; display: flex; justify-content: center; align-items: center; overflow: hidden;">
+                    <canvas id="barcode-canvas" style="max-width: 100%; height: auto; display: block;"></canvas>
+                </div>
+                <div id="qrcode-display-pane" style="width: 100%; display: none; justify-content: center; align-items: center;">
+                    <div id="qrcode-container" style="display: flex; justify-content: center; align-items: center; min-width: 180px; min-height: 180px;"></div>
+                </div>
+            </div>
+
+            <div style="font-size: 12px; color: #64748B; margin-bottom: 12px; text-align: center;">
+                💡 <i>Đưa màn hình điện thoại về phía máy quét hoặc camera khác để quét ngay</i>
+            </div>
+
+            <!-- Các nút hành động -->
+            <div class="barcode-actions-row">
+                <button class="btn-barcode-action btn-barcode-copy" onclick="copyBarcodeFromModal()">
+                    📋 Sao chép mã
+                </button>
+                <button class="btn-barcode-action btn-barcode-download" onclick="downloadBarcodeImage()">
+                    📥 Tải ảnh mã
+                </button>
             </div>
         </div>
     </div>
@@ -984,7 +1238,7 @@
                                 </div>
                             </td>
                             <td>
-                                <span class="cat-prod-barcode">${item.barcode || '-'}</span>
+                                <span class="cat-prod-barcode" style="cursor: pointer;" onclick="openBarcodeModal('${(item.barcode || '').replace(/'/g, "\\'")}', '${(item.ten_mau || '').replace(/'/g, "\\'").replace(/"/g, '&quot;')}', '${(item.loai_tu || 'Khác').replace(/'/g, "\\'").replace(/"/g, '&quot;')}', ${item.TonKho})" title="Bấm để xem và tạo mã quét">${item.barcode || '-'}</span>
                             </td>
                             <td>
                                 ${stockBadge}
@@ -1031,6 +1285,10 @@
                 let safeImgSrc = imgSrc.replace(/'/g, "\\'");
                 let imgTag = item.hinh ? `<img src="${imgSrc}" loading="lazy" class="m-img clickable-img" onerror="this.style.display='none'" onclick="viewImage('${safeImgSrc}', event)">` : '<div class="m-img"></div>';
                 
+                let barcodeSafe = (item.barcode || '').replace(/'/g, "\\'");
+                let nameSafe = (item.ten_mau || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                let loaiSafe = (item.loai_tu || 'Khác').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+
                 html += `
                     <div class="m-card" id="card_${key}">
                         <div class="m-body">
@@ -1038,7 +1296,18 @@
                             <div class="m-info">
                                 <div class="m-title">${item.ten_mau || ''}</div>
                                 <div><span class="badge bg-gray">${item.loai_tu || 'Khác'}</span></div>
-                                <div><span class="m-barcode">${item.barcode || ''}</span></div>
+                                <div class="m-barcode-row">
+                                    <span class="m-barcode" onclick="openBarcodeModal('${barcodeSafe}', '${nameSafe}', '${loaiSafe}', ${item.TonKho})" title="Bấm để xem và tạo mã quét">${item.barcode || '-'}</span>
+                                    <button class="btn-create-code" onclick="openBarcodeModal('${barcodeSafe}', '${nameSafe}', '${loaiSafe}', ${item.TonKho})" title="Tạo mã quét Barcode & QR">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                            <rect x="3" y="3" width="7" height="7"></rect>
+                                            <rect x="14" y="3" width="7" height="7"></rect>
+                                            <rect x="14" y="14" width="7" height="7"></rect>
+                                            <rect x="3" y="14" width="7" height="7"></rect>
+                                        </svg>
+                                        <span>Tạo mã quét</span>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                         <div class="m-footer">
@@ -1599,6 +1868,202 @@
                     btn.innerText = isMobile() ? "Xuất" : "Xuất hàng";
                 }
             }
+        }
+
+        // --- XỬ LÝ TẠO MÃ QUÉT (BARCODE 1D & QR CODE 2D) ---
+        let currentBarcodeData = { barcode: '', name: '', loai: '', stock: 0 };
+        let activeBarcodeTab = 'barcode';
+        let qrcodeObj = null;
+
+        function openBarcodeModal(barcode, name, loai, stock) {
+            if (!barcode || barcode === '-' || !String(barcode).trim()) {
+                Swal.fire('Chưa có mã vạch', 'Sản phẩm này chưa được thiết lập mã vạch (Barcode)!', 'info');
+                return;
+            }
+
+            const cleanBarcode = String(barcode).trim();
+            currentBarcodeData = {
+                barcode: cleanBarcode,
+                name: name || 'Chưa đặt tên',
+                loai: loai || 'Khác',
+                stock: stock ?? 0
+            };
+
+            // Cập nhật thông tin vào modal
+            document.getElementById('modal-barcode-name').innerText = currentBarcodeData.name;
+            document.getElementById('modal-barcode-cat').innerText = `🗄️ ${currentBarcodeData.loai}`;
+            document.getElementById('modal-barcode-stock').innerText = `Tồn: ${currentBarcodeData.stock}`;
+            document.getElementById('modal-barcode-num').innerText = cleanBarcode;
+
+            // Reset tab về Barcode mặc định
+            switchBarcodeTab('barcode');
+
+            // 1. Sinh mã vạch 1D
+            generate1DBarcode(cleanBarcode);
+
+            // 2. Sinh mã QR 2D
+            generate2DQRCode(cleanBarcode);
+
+            // Mở modal
+            const modal = document.getElementById('barcodeModal');
+            if (modal) {
+                modal.style.display = 'flex';
+            }
+        }
+
+        function generate1DBarcode(barcodeText) {
+            const canvas = document.getElementById('barcode-canvas');
+            if (!canvas || typeof JsBarcode === 'undefined') return;
+
+            let format = "CODE128";
+            if (/^\d{13}$/.test(barcodeText)) {
+                format = "EAN13";
+            } else if (/^\d{8}$/.test(barcodeText)) {
+                format = "EAN8";
+            }
+
+            try {
+                JsBarcode(canvas, barcodeText, {
+                    format: format,
+                    lineColor: "#000000",
+                    width: 2.2,
+                    height: 90,
+                    displayValue: true,
+                    fontSize: 16,
+                    font: "Inter, sans-serif",
+                    textMargin: 6,
+                    background: "#ffffff"
+                });
+            } catch (err) {
+                // Thử lại với CODE128 nếu định dạng EAN lỗi checksum
+                try {
+                    JsBarcode(canvas, barcodeText, {
+                        format: "CODE128",
+                        lineColor: "#000000",
+                        width: 2,
+                        height: 90,
+                        displayValue: true,
+                        fontSize: 16,
+                        font: "Inter, sans-serif",
+                        textMargin: 6,
+                        background: "#ffffff"
+                    });
+                } catch (err2) {
+                    console.warn("Lỗi sinh barcode:", err2);
+                }
+            }
+        }
+
+        function generate2DQRCode(barcodeText) {
+            const container = document.getElementById('qrcode-container');
+            if (!container || typeof QRCode === 'undefined') return;
+
+            container.innerHTML = '';
+            try {
+                qrcodeObj = new QRCode(container, {
+                    text: barcodeText,
+                    width: 175,
+                    height: 175,
+                    colorDark: "#000000",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+            } catch (e) {
+                console.warn("Lỗi sinh QR:", e);
+            }
+        }
+
+        function switchBarcodeTab(tab) {
+            activeBarcodeTab = tab;
+            const btnBarcode = document.getElementById('tab-barcode-btn');
+            const btnQr = document.getElementById('tab-qrcode-btn');
+            const paneBarcode = document.getElementById('barcode-display-pane');
+            const paneQr = document.getElementById('qrcode-display-pane');
+
+            if (tab === 'barcode') {
+                btnBarcode.classList.add('active');
+                btnQr.classList.remove('active');
+                paneBarcode.style.display = 'flex';
+                paneQr.style.display = 'none';
+            } else {
+                btnQr.classList.add('active');
+                btnBarcode.classList.remove('active');
+                paneBarcode.style.display = 'none';
+                paneQr.style.display = 'flex';
+            }
+        }
+
+        function closeBarcodeModal(e) {
+            if (e && e.target && e.target !== document.getElementById('barcodeModal') && !e.target.closest('.barcode-close-btn')) {
+                return;
+            }
+            const modal = document.getElementById('barcodeModal');
+            if (modal) modal.style.display = 'none';
+        }
+
+        function copyBarcodeFromModal() {
+            if (!currentBarcodeData.barcode) return;
+            navigator.clipboard.writeText(currentBarcodeData.barcode).then(() => {
+                Swal.fire({
+                    title: 'Đã sao chép mã!',
+                    text: currentBarcodeData.barcode,
+                    icon: 'success',
+                    timer: 1500,
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false
+                });
+            }).catch(() => {
+                Swal.fire('Thông báo', `Mã: ${currentBarcodeData.barcode}`, 'info');
+            });
+        }
+
+        function downloadBarcodeImage() {
+            if (!currentBarcodeData.barcode) return;
+            const cleanBarcode = currentBarcodeData.barcode;
+            const safeName = currentBarcodeData.name.replace(/[^a-zA-Z0-9_-]/g, '_');
+
+            if (activeBarcodeTab === 'barcode') {
+                const canvas = document.getElementById('barcode-canvas');
+                if (!canvas) return;
+                const url = canvas.toDataURL('image/png');
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `Barcode_${cleanBarcode}_${safeName}.png`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            } else {
+                const qrContainer = document.getElementById('qrcode-container');
+                const qrCanvas = qrContainer ? qrContainer.querySelector('canvas') : null;
+                const qrImg = qrContainer ? qrContainer.querySelector('img') : null;
+
+                let dataUrl = '';
+                if (qrCanvas) {
+                    dataUrl = qrCanvas.toDataURL('image/png');
+                } else if (qrImg && qrImg.src) {
+                    dataUrl = qrImg.src;
+                }
+
+                if (dataUrl) {
+                    const a = document.createElement('a');
+                    a.href = dataUrl;
+                    a.download = `QRCode_${cleanBarcode}_${safeName}.png`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                }
+            }
+
+            Swal.fire({
+                title: 'Đã tải ảnh mã!',
+                text: 'Ảnh mã quét đã được lưu về thiết bị.',
+                icon: 'success',
+                timer: 1500,
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false
+            });
         }
 
         // Khởi chạy khi vào trang
