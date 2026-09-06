@@ -16,6 +16,9 @@
     <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.20.0/umd/index.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@ericblade/quagga2@1.8.4/dist/quagga.min.js"></script>
+    <!-- JsBarcode & QRCode.js để sinh mã vạch và mã QR quét trực tiếp -->
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     
     <style>
         /* --- 1. GLOBAL VARIABLES & RESET --- */
@@ -279,6 +282,7 @@
             color: #475569; padding: 7px 16px; border-radius: 20px;
             font-size: 13px; font-weight: 600; cursor: pointer;
             transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px;
+            white-space: nowrap; flex-shrink: 0; user-select: none;
         }
         .filter-pill:hover { border-color: var(--primary); color: var(--primary); background: white; }
         .filter-pill.active {
@@ -286,7 +290,22 @@
             box-shadow: 0 2px 8px rgba(79, 70, 229, 0.25);
         }
 
-        .main-action-buttons { display: flex; gap: 10px; align-items: center; }
+        .log-filter-pills {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: nowrap !important;
+            overflow-x: auto !important;
+            padding-bottom: 4px;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        .log-filter-pills::-webkit-scrollbar {
+            display: none;
+        }
+
+        .main-action-buttons { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
         .btn-add-prod {
             padding: 10px 22px; font-size: 14px; font-weight: 700;
         }
@@ -366,6 +385,62 @@
         .icon-edit:hover { background: #FDE68A; transform: scale(1.08); }
         .icon-trash { background: #FEF2F2; color: #DC2626; border-color: #FEE2E2; }
         .icon-trash:hover { background: #FCA5A5; color: #991B1B; transform: scale(1.08); }
+        .icon-code { background: #EEF2FF; color: var(--primary); border-color: #E0E7FF; }
+        .icon-code:hover { background: #C7D2FE; transform: scale(1.08); }
+
+        .btn-create-code {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: #EEF2FF;
+            color: var(--primary);
+            border: 1px solid #C7D2FE;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 11.5px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            line-height: 1.2;
+        }
+        .btn-create-code:hover {
+            background: #E0E7FF;
+            border-color: var(--primary);
+            transform: translateY(-1px);
+        }
+        .btn-create-code:active {
+            transform: scale(0.96);
+        }
+
+        .barcode-tab-btn {
+            flex: 1;
+            border: none;
+            background: transparent;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #64748B;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        .barcode-tab-btn.active {
+            background: white;
+            color: var(--primary);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+        }
+
+        /* Badge loại giao dịch Log */
+        .badge-log { display: inline-flex; align-items: center; padding: 3px 8px; border-radius: 6px; font-size: 11.5px; font-weight: 700; gap: 4px; }
+        .badge-xuat { background: #FEE2E2; color: #DC2626; border: 1px solid #FECACA; }
+        .badge-nhap { background: #DCFCE7; color: #16A34A; border: 1px solid #BBF7D0; }
+        .badge-edit { background: #FEF3C7; color: #D97706; border: 1px solid #FDE68A; }
+        .badge-add  { background: #EEF2FF; color: #4F46E5; border: 1px solid #C7D2FE; }
+        .badge-del  { background: #F1F5F9; color: #64748B; border: 1px solid #E2E8F0; }
 
         .mobile-only { display: none; }
 
@@ -485,10 +560,35 @@
             .custom-select { padding: 10px 10px; font-size: 12px; border-radius: 50px; text-overflow: ellipsis; white-space: nowrap; }
             
             .toolbar-bottom-row { flex-direction: column; align-items: stretch; gap: 10px; }
-            .filter-pills { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; -webkit-overflow-scrolling: touch; }
+            .filter-pills { 
+                flex-wrap: nowrap; 
+                overflow-x: auto; 
+                padding-bottom: 4px; 
+                -webkit-overflow-scrolling: touch; 
+                scrollbar-width: none; 
+                -ms-overflow-style: none; 
+            }
+            .filter-pills::-webkit-scrollbar { display: none; }
             .filter-pill { flex-shrink: 0; }
-            .main-action-buttons { display: flex; flex-direction: row; width: 100%; gap: 8px; }
-            .main-action-buttons .btn { flex: 1; padding: 10px 12px; font-size: 13px; white-space: nowrap; }
+            .main-action-buttons { 
+                display: flex; 
+                flex-direction: row; 
+                width: 100%; 
+                gap: 8px; 
+                overflow-x: auto; 
+                flex-wrap: nowrap; 
+                padding-bottom: 4px; 
+                -webkit-overflow-scrolling: touch; 
+                scrollbar-width: none; 
+                -ms-overflow-style: none; 
+            }
+            .main-action-buttons::-webkit-scrollbar { display: none; }
+            .main-action-buttons .btn { 
+                flex-shrink: 0; 
+                padding: 10px 14px; 
+                font-size: 13px; 
+                white-space: nowrap; 
+            }
 
             table, thead, tbody, th, td, tr { display: block; }
             thead { display: none; }
@@ -656,6 +756,9 @@
                 </div>
                 
                 <div class="main-action-buttons">
+                    <button onclick="openStockLogsModal()" class="btn btn-outline" title="Xem lịch sử xuất - nhập kho">
+                        <span>📜</span> <span class="btn-text">Lịch Sử Kho</span>
+                    </button>
                     <button onclick="exportToCSV()" class="btn btn-outline btn-export" title="Tải toàn bộ dữ liệu ra file Excel CSV">
                         <span>📥</span> <span class="btn-text">Xuất Excel / CSV</span>
                     </button>
@@ -805,6 +908,146 @@
                     <div>• <b>Ánh sáng:</b> Đảm bảo đủ sáng, tránh bóng tối hoặc bị lóa đèn.</div>
                     <div>• <b>Góc độ:</b> Đặt mã vạch <b>thẳng ngang</b> trong khung quét.</div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL TẠO MÃ QUÉT CHO ADMIN (BARCODE 1D & QR CODE 2D) -->
+    <div id="adminBarcodeModal" class="modal-overlay" onclick="if(event.target === this) closeAdminBarcodeModal()">
+        <div class="modal-content" style="max-width: 460px; text-align: center; border-radius: 20px;" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3 style="display: flex; align-items: center; gap: 8px;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--primary);">
+                        <rect x="3" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="14" width="7" height="7"></rect>
+                        <rect x="3" y="14" width="7" height="7"></rect>
+                    </svg>
+                    Mã Quét Sản Phẩm
+                </h3>
+                <button class="modal-close" onclick="closeAdminBarcodeModal()" title="Đóng">✕</button>
+            </div>
+            
+            <div class="modal-body" style="padding: 20px;">
+                <!-- Thẻ thông tin sản phẩm -->
+                <div class="barcode-prod-card" style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 12px; padding: 12px; text-align: left; margin-bottom: 14px;">
+                    <div id="admin-modal-barcode-name" style="font-weight: 700; color: #0F172A; font-size: 14px; line-height: 1.35; margin-bottom: 4px;">Tên sản phẩm</div>
+                    <div style="font-size: 12px; color: #64748B; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                        <span id="admin-modal-barcode-cat" class="badge" style="background: #E2E8F0; color: #334155;">Loại tủ</span>
+                        <span>•</span>
+                        <span id="admin-modal-barcode-stock" style="font-weight: 600; color: var(--primary);">Tồn: 0</span>
+                        <span>•</span>
+                        <span id="admin-modal-barcode-num" style="font-family: monospace; font-weight: 600; color: #334155;">8935...</span>
+                    </div>
+                </div>
+
+                <!-- Bộ chuyển đổi Tab: Mã vạch / Mã QR -->
+                <div class="barcode-tabs" style="display: flex; background: #F1F5F9; border-radius: 10px; padding: 4px; gap: 4px; margin-bottom: 14px;">
+                    <button id="admin-tab-barcode-btn" class="barcode-tab-btn active" onclick="switchAdminBarcodeTab('barcode')">
+                        📊 Mã vạch (1D)
+                    </button>
+                    <button id="admin-tab-qrcode-btn" class="barcode-tab-btn" onclick="switchAdminBarcodeTab('qrcode')">
+                        📱 Mã QR (2D)
+                    </button>
+                </div>
+
+                <!-- Vùng hiển thị mã tương phản cao để quét trực tiếp hoặc in -->
+                <div class="barcode-display-wrapper" style="background: #FFFFFF; border: 2px dashed #CBD5E1; border-radius: 14px; padding: 16px 10px; display: flex; align-items: center; justify-content: center; min-height: 150px; margin-bottom: 12px;">
+                    <div id="admin-barcode-display-pane" style="width: 100%; display: flex; justify-content: center; align-items: center; overflow: hidden;">
+                        <canvas id="admin-barcode-canvas" style="max-width: 100%; height: auto; display: block;"></canvas>
+                    </div>
+                    <div id="admin-qrcode-display-pane" style="width: 100%; display: none; justify-content: center; align-items: center;">
+                        <div id="admin-qrcode-container" style="display: flex; justify-content: center; align-items: center; min-width: 180px; min-height: 180px;"></div>
+                    </div>
+                </div>
+
+                <div style="font-size: 12px; color: #64748B; margin-bottom: 6px; text-align: center;">
+                    💡 <i>Quét trực tiếp từ màn hình hoặc tải ảnh về để in tem dán lên sản phẩm</i>
+                </div>
+            </div>
+
+            <div class="modal-footer" style="padding: 14px 20px; display: flex; gap: 10px;">
+                <button class="btn btn-outline" style="flex: 1;" onclick="copyAdminBarcodeFromModal()">
+                    📋 Sao chép mã
+                </button>
+                <button class="btn btn-primary" style="flex: 1;" onclick="downloadAdminBarcodeImage()">
+                    📥 Tải ảnh mã
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL LỊCH SỬ XUẤT - NHẬP KHO (STOCK MOVEMENT LOGS) -->
+    <div id="stockLogsModal" class="modal-overlay" onclick="if(event.target === this) closeStockLogsModal()">
+        <div class="modal-content" style="max-width: 950px; width: 95%; max-height: 90vh; border-radius: 20px; position: relative;" onclick="event.stopPropagation()">
+            <div class="modal-header" style="position: relative; flex-wrap: wrap; gap: 10px; padding: 16px 20px; padding-right: 60px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="font-size: 24px;">📜</div>
+                    <div>
+                        <h3 style="margin: 0; font-size: 18px; font-weight: 800; color: #0F172A;">Lịch Sử Xuất - Nhập Kho</h3>
+                        <div style="font-size: 12px; color: #64748B; margin-top: 2px;">Theo dõi biến động và nhật ký giao dịch kho hàng</div>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <button class="btn btn-outline" style="padding: 7px 12px; font-size: 12px;" onclick="loadStockLogs()" title="Tải lại nhật ký">
+                        🔄 Làm Mới
+                    </button>
+                    <button class="btn btn-primary" style="padding: 7px 14px; font-size: 12px;" onclick="exportLogsToCSV()" title="Xuất nhật ký ra file Excel CSV">
+                        📥 Xuất CSV
+                    </button>
+                </div>
+                <button class="modal-close" onclick="closeStockLogsModal()" title="Đóng" style="position: absolute; top: 16px; right: 16px; z-index: 5;">✕</button>
+            </div>
+
+            <!-- BỘ LỌC VÀ TÌM KIẾM LOGS -->
+            <div style="padding: 14px 20px; background: #F8FAFC; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 10px;">
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <div class="search-wrapper" style="flex: 1; min-width: 200px;">
+                        <span class="search-icon">🔍</span>
+                        <input id="logSearchInput" type="text" class="search-input" placeholder="Tìm kiếm theo tên mẫu, mã barcode..." oninput="filterStockLogs()">
+                    </div>
+                </div>
+                <div class="filter-pills log-filter-pills">
+                    <button class="filter-pill active" data-logfilter="all" onclick="setLogsFilter('all')">✨ Tất cả</button>
+                    <button class="filter-pill" data-logfilter="XUAT_KHO" onclick="setLogsFilter('XUAT_KHO')">🔴 Xuất kho</button>
+                    <button class="filter-pill" data-logfilter="NHAP_KHO" onclick="setLogsFilter('NHAP_KHO')">🟢 Nhập kho</button>
+                    <button class="filter-pill" data-logfilter="CAP_NHAT" onclick="setLogsFilter('CAP_NHAT')">🟡 Điều chỉnh</button>
+                    <button class="filter-pill" data-logfilter="THEM_MOI" onclick="setLogsFilter('THEM_MOI')">🔵 Thêm mới</button>
+                    <button class="filter-pill" data-logfilter="XOA" onclick="setLogsFilter('XOA')">⚪ Xóa bỏ</button>
+                </div>
+            </div>
+
+            <!-- NỘI DUNG BẢNG LỊCH SỬ -->
+            <div class="modal-body" style="padding: 0; overflow-y: auto; max-height: 52vh;">
+                <div class="table-responsive">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                        <thead style="position: sticky; top: 0; background: #F8FAFC; z-index: 2; border-bottom: 1px solid var(--border);">
+                            <tr>
+                                <th style="padding: 12px 16px; text-align: left;" width="160">Thời Gian</th>
+                                <th style="padding: 12px 16px; text-align: left;">Sản Phẩm & Phân Loại</th>
+                                <th style="padding: 12px 16px; text-align: left;" width="140">Mã Barcode</th>
+                                <th style="padding: 12px 16px; text-align: center;" width="120">Loại Thao Tác</th>
+                                <th style="padding: 12px 16px; text-align: center;" width="100">Biến Động</th>
+                                <th style="padding: 12px 16px; text-align: center;" width="110">Tồn Kho</th>
+                                <th style="padding: 12px 16px; text-align: left;" width="150">Ghi Chú</th>
+                            </tr>
+                        </thead>
+                        <tbody id="logs-table-body">
+                            <tr>
+                                <td colspan="7" style="text-align: center; padding: 40px; color: #64748B;">
+                                    ⏳ Đang tải dữ liệu lịch sử...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="modal-footer" style="padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; background: #FAFAFC;">
+                <div id="logs-counter-info" style="font-size: 13px; color: #64748B; font-weight: 500;">
+                    Hiển thị 0 giao dịch
+                </div>
+                <button class="btn btn-secondary" onclick="closeStockLogsModal()">Đóng</button>
             </div>
         </div>
     </div>
@@ -1642,21 +1885,34 @@
                 let badgeText = stock > 10 ? 'Sẵn hàng' : (stock > 0 ? 'Sắp hết' : 'Hết hàng');
 
                 let barcodeSafe = (item.barcode || '').replace(/'/g, "\\'");
+                let nameSafe = (item.ten_mau || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                let loaiSafe = (item.loai_tu || 'Khác').replace(/'/g, "\\'").replace(/"/g, '&quot;');
 
                 let row = `
 					<tr>
 						<td>${imgHtml}</td>
 						<td class="pc-only-cell">
-                            <span class="pc-barcode" onclick="copyBarcode('${barcodeSafe}', event)" title="Bấm để sao chép mã">
-                                <span>${item.barcode || '-'}</span>
-                                <span style="font-size: 11px; opacity: 0.6;">📋</span>
-                            </span>
+                            <div style="display: flex; align-items: center; gap: 6px;">
+                                <span class="pc-barcode" onclick="openAdminBarcodeModal('${barcodeSafe}', '${nameSafe}', '${loaiSafe}', ${stock})" title="Bấm để xem & tạo mã quét">
+                                    <span>${item.barcode || '-'}</span>
+                                    <span style="font-size: 11px; opacity: 0.7;">🔲</span>
+                                </span>
+                            </div>
                         </td>
 						<td>
 							<div class="item-name">${item.ten_mau || 'Chưa đặt tên'}</div>
 							<div><span class="item-cat">🗄️ ${item.loai_tu || 'Khác'}</span></div>
-							<div class="mobile-only" style="margin-top: 3px;">
-								<span class="mobile-barcode" onclick="copyBarcode('${barcodeSafe}', event)" title="Bấm để sao chép">${item.barcode || '-'}</span>
+							<div class="mobile-only" style="margin-top: 3px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+								<span class="mobile-barcode" onclick="openAdminBarcodeModal('${barcodeSafe}', '${nameSafe}', '${loaiSafe}', ${stock})" title="Bấm để xem & tạo mã quét">${item.barcode || '-'}</span>
+                                <button class="btn-create-code" onclick="openAdminBarcodeModal('${barcodeSafe}', '${nameSafe}', '${loaiSafe}', ${stock})" title="Tạo mã quét Barcode & QR">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <rect x="3" y="3" width="7" height="7"></rect>
+                                        <rect x="14" y="3" width="7" height="7"></rect>
+                                        <rect x="14" y="14" width="7" height="7"></rect>
+                                        <rect x="3" y="14" width="7" height="7"></rect>
+                                    </svg>
+                                    <span>Tạo mã</span>
+                                </button>
 							</div>
 							<div class="mobile-only" style="margin-top: 4px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
 								<span class="stock-num" style="font-size: 13px;">
@@ -1677,6 +1933,7 @@
 						</td>
 						<td style="text-align:center">
                             <div class="row-actions">
+                                <button class="action-btn icon-code" title="Tạo mã quét Barcode & QR" onclick="openAdminBarcodeModal('${barcodeSafe}', '${nameSafe}', '${loaiSafe}', ${stock})">🔲</button>
                                 <button class="action-btn icon-edit" title="Chỉnh sửa sản phẩm" onclick="openProductModal(${item.id})">✏️</button>
                                 <button class="action-btn icon-trash" title="Xóa sản phẩm" onclick="deleteItem(${item.id})">🗑️</button>
                             </div>
@@ -1738,11 +1995,57 @@
             saveBtn.disabled = true;
             saveBtn.innerHTML = `<span class="btn-spinner"></span> Đang lưu...`;
 
+            const oldItem = id ? inventoryList.find(i => String(i.id) === String(id)) : null;
+
             try {
                 const task = id ? db.from('inventory').update(payload).eq('id', id) : db.from('inventory').insert([payload]);
                 const { error } = await task;
                 
                 if (error) throw error;
+
+                // Tự động ghi nhật ký stock_logs
+                try {
+                    if (id && oldItem) {
+                        const oldStock = parseInt(oldItem.ton_kho || 0);
+                        const diff = ton_kho - oldStock;
+                        if (diff !== 0) {
+                            db.from('stock_logs').insert([{
+                                barcode: barcode,
+                                ten_mau: ten_mau,
+                                loai_tu: loai_tu || 'Khác',
+                                change_qty: diff,
+                                old_stock: oldStock,
+                                new_stock: ton_kho,
+                                action_type: diff > 0 ? 'NHAP_KHO' : 'CAP_NHAT',
+                                note: diff > 0 ? `Nhập thêm ${diff} cái` : `Điều chỉnh giảm ${Math.abs(diff)} cái`
+                            }]).then(() => {}).catch(e => console.warn("Lỗi log:", e));
+                        } else {
+                            db.from('stock_logs').insert([{
+                                barcode: barcode,
+                                ten_mau: ten_mau,
+                                loai_tu: loai_tu || 'Khác',
+                                change_qty: 0,
+                                old_stock: ton_kho,
+                                new_stock: ton_kho,
+                                action_type: 'CAP_NHAT',
+                                note: 'Cập nhật thông tin mẫu'
+                            }]).then(() => {}).catch(e => console.warn("Lỗi log:", e));
+                        }
+                    } else if (!id) {
+                        db.from('stock_logs').insert([{
+                            barcode: barcode,
+                            ten_mau: ten_mau,
+                            loai_tu: loai_tu || 'Khác',
+                            change_qty: ton_kho,
+                            old_stock: 0,
+                            new_stock: ton_kho,
+                            action_type: 'THEM_MOI',
+                            note: `Khởi tạo mẫu mới với tồn ${ton_kho} cái`
+                        }]).then(() => {}).catch(e => console.warn("Lỗi log:", e));
+                    }
+                } catch (logErr) {
+                    console.warn("Lỗi ghi stock_logs:", logErr);
+                }
 
                 closeProductModal();
                 Swal.fire({
@@ -1763,6 +2066,7 @@
         }
 
         async function deleteItem(id) {
+            const delItem = inventoryList.find(i => String(i.id) === String(id));
             const result = await Swal.fire({
                 title: 'Xác nhận xóa?',
                 text: 'Hành động này sẽ xóa hoàn toàn sản phẩm khỏi hệ thống và không thể hoàn tác.',
@@ -1779,6 +2083,21 @@
                     const { error } = await db.from('inventory').delete().eq('id', id);
                     if (error) throw error;
 
+                    if (delItem) {
+                        try {
+                            db.from('stock_logs').insert([{
+                                barcode: delItem.barcode || '',
+                                ten_mau: delItem.ten_mau || '',
+                                loai_tu: delItem.loai_tu || 'Khác',
+                                change_qty: -parseInt(delItem.ton_kho || 0),
+                                old_stock: parseInt(delItem.ton_kho || 0),
+                                new_stock: 0,
+                                action_type: 'XOA',
+                                note: 'Xóa sản phẩm khỏi hệ thống'
+                            }]).then(() => {}).catch(e => console.warn("Lỗi log:", e));
+                        } catch (e) {}
+                    }
+
                     Swal.fire({
                         title: 'Đã xóa!',
                         text: 'Sản phẩm đã được xóa khỏi kho.',
@@ -1792,6 +2111,409 @@
                 }
             }
         }
+
+        // --- XỬ LÝ TẠO MÃ QUÉT TRONG ADMIN (BARCODE 1D & QR CODE 2D) ---
+        let currentAdminBarcodeData = { barcode: '', name: '', loai: '', stock: 0 };
+        let activeAdminBarcodeTab = 'barcode';
+        let adminQrcodeObj = null;
+
+        function openAdminBarcodeModal(barcode, name, loai, stock) {
+            if (!barcode || barcode === '-' || !String(barcode).trim()) {
+                Swal.fire('Chưa có mã vạch', 'Sản phẩm này chưa được thiết lập mã vạch (Barcode)!', 'info');
+                return;
+            }
+
+            const cleanBarcode = String(barcode).trim();
+            currentAdminBarcodeData = {
+                barcode: cleanBarcode,
+                name: name || 'Chưa đặt tên',
+                loai: loai || 'Khác',
+                stock: stock ?? 0
+            };
+
+            // Cập nhật thông tin vào modal
+            document.getElementById('admin-modal-barcode-name').innerText = currentAdminBarcodeData.name;
+            document.getElementById('admin-modal-barcode-cat').innerText = `🗄️ ${currentAdminBarcodeData.loai}`;
+            document.getElementById('admin-modal-barcode-stock').innerText = `Tồn: ${currentAdminBarcodeData.stock}`;
+            document.getElementById('admin-modal-barcode-num').innerText = cleanBarcode;
+
+            // Reset tab về Barcode mặc định
+            switchAdminBarcodeTab('barcode');
+
+            // 1. Sinh mã vạch 1D
+            generateAdmin1DBarcode(cleanBarcode);
+
+            // 2. Sinh mã QR 2D
+            generateAdmin2DQRCode(cleanBarcode);
+
+            // Mở modal
+            const modal = document.getElementById('adminBarcodeModal');
+            if (modal) {
+                modal.style.display = 'flex';
+            }
+        }
+
+        function generateAdmin1DBarcode(barcodeText) {
+            const canvas = document.getElementById('admin-barcode-canvas');
+            if (!canvas || typeof JsBarcode === 'undefined') return;
+
+            let format = "CODE128";
+            if (/^\d{13}$/.test(barcodeText)) {
+                format = "EAN13";
+            } else if (/^\d{8}$/.test(barcodeText)) {
+                format = "EAN8";
+            }
+
+            try {
+                JsBarcode(canvas, barcodeText, {
+                    format: format,
+                    lineColor: "#000000",
+                    width: 2.2,
+                    height: 90,
+                    displayValue: true,
+                    fontSize: 16,
+                    font: "Inter, sans-serif",
+                    textMargin: 6,
+                    background: "#ffffff"
+                });
+            } catch (err) {
+                try {
+                    JsBarcode(canvas, barcodeText, {
+                        format: "CODE128",
+                        lineColor: "#000000",
+                        width: 2,
+                        height: 90,
+                        displayValue: true,
+                        fontSize: 16,
+                        font: "Inter, sans-serif",
+                        textMargin: 6,
+                        background: "#ffffff"
+                    });
+                } catch (err2) {
+                    console.warn("Lỗi sinh barcode admin:", err2);
+                }
+            }
+        }
+
+        function generateAdmin2DQRCode(barcodeText) {
+            const container = document.getElementById('admin-qrcode-container');
+            if (!container || typeof QRCode === 'undefined') return;
+
+            container.innerHTML = '';
+            try {
+                adminQrcodeObj = new QRCode(container, {
+                    text: barcodeText,
+                    width: 175,
+                    height: 175,
+                    colorDark: "#000000",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+            } catch (e) {
+                console.warn("Lỗi sinh QR admin:", e);
+            }
+        }
+
+        function switchAdminBarcodeTab(tab) {
+            activeAdminBarcodeTab = tab;
+            const btnBarcode = document.getElementById('admin-tab-barcode-btn');
+            const btnQr = document.getElementById('admin-tab-qrcode-btn');
+            const paneBarcode = document.getElementById('admin-barcode-display-pane');
+            const paneQr = document.getElementById('admin-qrcode-display-pane');
+
+            if (tab === 'barcode') {
+                btnBarcode.classList.add('active');
+                btnQr.classList.remove('active');
+                paneBarcode.style.display = 'flex';
+                paneQr.style.display = 'none';
+            } else {
+                btnQr.classList.add('active');
+                btnBarcode.classList.remove('active');
+                paneBarcode.style.display = 'none';
+                paneQr.style.display = 'flex';
+            }
+        }
+
+        function closeAdminBarcodeModal(e) {
+            if (e && e.target && e.target !== document.getElementById('adminBarcodeModal') && !e.target.closest('.modal-close')) {
+                return;
+            }
+            const modal = document.getElementById('adminBarcodeModal');
+            if (modal) modal.style.display = 'none';
+        }
+
+        function copyAdminBarcodeFromModal() {
+            if (!currentAdminBarcodeData.barcode) return;
+            navigator.clipboard.writeText(currentAdminBarcodeData.barcode).then(() => {
+                Swal.fire({
+                    title: 'Đã sao chép mã!',
+                    text: currentAdminBarcodeData.barcode,
+                    icon: 'success',
+                    timer: 1500,
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false
+                });
+            }).catch(() => {
+                Swal.fire('Thông báo', `Mã: ${currentAdminBarcodeData.barcode}`, 'info');
+            });
+        }
+
+        function downloadAdminBarcodeImage() {
+            if (!currentAdminBarcodeData.barcode) return;
+            const cleanBarcode = currentAdminBarcodeData.barcode;
+            const safeName = currentAdminBarcodeData.name.replace(/[^a-zA-Z0-9_-]/g, '_');
+
+            if (activeAdminBarcodeTab === 'barcode') {
+                const canvas = document.getElementById('admin-barcode-canvas');
+                if (!canvas) return;
+                const url = canvas.toDataURL('image/png');
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `Barcode_${cleanBarcode}_${safeName}.png`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            } else {
+                const qrContainer = document.getElementById('admin-qrcode-container');
+                const qrCanvas = qrContainer ? qrContainer.querySelector('canvas') : null;
+                const qrImg = qrContainer ? qrContainer.querySelector('img') : null;
+
+                let dataUrl = '';
+                if (qrCanvas) {
+                    dataUrl = qrCanvas.toDataURL('image/png');
+                } else if (qrImg && qrImg.src) {
+                    dataUrl = qrImg.src;
+                }
+
+                if (dataUrl) {
+                    const a = document.createElement('a');
+                    a.href = dataUrl;
+                    a.download = `QRCode_${cleanBarcode}_${safeName}.png`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                }
+            }
+
+            Swal.fire({
+                title: 'Đã tải ảnh mã!',
+                text: 'Ảnh mã quét đã được lưu về thiết bị.',
+                icon: 'success',
+                timer: 1500,
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false
+            });
+        }
+
+        // --- HỆ THỐNG LỊCH SỬ XUẤT - NHẬP KHO (STOCK MOVEMENT LOGS) ---
+        let allStockLogs = [];
+        let currentLogFilter = 'all';
+
+        async function openStockLogsModal() {
+            const modal = document.getElementById('stockLogsModal');
+            if (modal) modal.style.display = 'flex';
+            await loadStockLogs();
+        }
+
+        function closeStockLogsModal() {
+            const modal = document.getElementById('stockLogsModal');
+            if (modal) modal.style.display = 'none';
+        }
+
+        async function loadStockLogs() {
+            const tbody = document.getElementById('logs-table-body');
+            if (tbody) {
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 40px; color: #64748B;">⏳ Đang tải dữ liệu lịch sử...</td></tr>`;
+            }
+
+            try {
+                const { data, error } = await db
+                    .from('stock_logs')
+                    .select('*')
+                    .order('created_at', { ascending: false })
+                    .limit(300);
+
+                if (error) {
+                    if (error.code === '42P01' || error.message.includes('does not exist')) {
+                        tbody.innerHTML = `
+                            <tr>
+                                <td colspan="7" style="text-align: center; padding: 30px; color: #DC2626;">
+                                    <b>⚠️ Bảng "stock_logs" chưa được khởi tạo trên Supabase!</b><br>
+                                    <span style="font-size: 12px; color: #64748B;">Vui lòng mở Supabase SQL Editor và chạy câu lệnh tạo bảng để kích hoạt tính năng này.</span>
+                                </td>
+                            </tr>
+                        `;
+                        return;
+                    }
+                    throw error;
+                }
+
+                allStockLogs = data || [];
+                filterStockLogs();
+            } catch (err) {
+                if (tbody) {
+                    tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 30px; color: #DC2626;">❌ Lỗi tải lịch sử: ${err.message}</td></tr>`;
+                }
+            }
+        }
+
+        function setLogsFilter(type) {
+            currentLogFilter = type;
+            document.querySelectorAll('[data-logfilter]').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.logfilter === type);
+            });
+            filterStockLogs();
+        }
+
+        function filterStockLogs() {
+            const keyword = (document.getElementById('logSearchInput') ? document.getElementById('logSearchInput').value : '').toLowerCase().trim();
+            const filtered = allStockLogs.filter(log => {
+                if (currentLogFilter !== 'all' && log.action_type !== currentLogFilter) return false;
+                if (keyword) {
+                    const match = `${log.ten_mau || ''} ${log.barcode || ''} ${log.loai_tu || ''} ${log.note || ''}`.toLowerCase().includes(keyword);
+                    if (!match) return false;
+                }
+                return true;
+            });
+
+            renderStockLogsTable(filtered);
+        }
+
+        function formatLogTime(timeStr) {
+            if (!timeStr) return '-';
+            try {
+                const d = new Date(timeStr);
+                const pad = (n) => String(n).padStart(2, '0');
+                return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())} ${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()}`;
+            } catch (e) {
+                return timeStr;
+            }
+        }
+
+        function getActionBadge(type) {
+            switch(type) {
+                case 'XUAT_KHO':
+                    return `<span class="badge-log badge-xuat">🔴 Xuất kho</span>`;
+                case 'NHAP_KHO':
+                    return `<span class="badge-log badge-nhap">🟢 Nhập kho</span>`;
+                case 'CAP_NHAT':
+                    return `<span class="badge-log badge-edit">🟡 Điều chỉnh</span>`;
+                case 'THEM_MOI':
+                    return `<span class="badge-log badge-add">🔵 Thêm mới</span>`;
+                case 'XOA':
+                    return `<span class="badge-log badge-del">⚪ Xóa bỏ</span>`;
+                default:
+                    return `<span class="badge-log badge-del">${type || 'Khác'}</span>`;
+            }
+        }
+
+        function renderStockLogsTable(logs) {
+            const tbody = document.getElementById('logs-table-body');
+            const counter = document.getElementById('logs-counter-info');
+            if (counter) counter.innerText = `Hiển thị ${logs.length} / ${allStockLogs.length} giao dịch`;
+
+            if (!tbody) return;
+            if (logs.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 40px; color: #64748B;">
+                            📦 Không tìm thấy bản ghi lịch sử nào phù hợp
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            let html = '';
+            logs.forEach(log => {
+                const diff = parseInt(log.change_qty || 0);
+                const diffColor = diff > 0 ? '#16A34A' : (diff < 0 ? '#DC2626' : '#64748B');
+                const diffSign = diff > 0 ? `+${diff}` : `${diff}`;
+                const timeFormatted = formatLogTime(log.created_at);
+                const actionBadge = getActionBadge(log.action_type);
+
+                html += `
+                    <tr style="border-bottom: 1px solid #F1F5F9;">
+                        <td style="padding: 12px 16px; color: #64748B; font-size: 12px; white-space: nowrap;">
+                            ${timeFormatted}
+                        </td>
+                        <td style="padding: 12px 16px;">
+                            <div style="font-weight: 700; color: #0F172A;">${log.ten_mau || 'Chưa đặt tên'}</div>
+                            <div style="font-size: 11.5px; color: #64748B; margin-top: 2px;">🗄️ ${log.loai_tu || 'Khác'}</div>
+                        </td>
+                        <td style="padding: 12px 16px; font-family: monospace; font-weight: 600; color: #334155;">
+                            ${log.barcode || '-'}
+                        </td>
+                        <td style="padding: 12px 16px; text-align: center;">
+                            ${actionBadge}
+                        </td>
+                        <td style="padding: 12px 16px; text-align: center; font-weight: 800; font-size: 14px; color: ${diffColor};">
+                            ${diffSign}
+                        </td>
+                        <td style="padding: 12px 16px; text-align: center; font-size: 12px; color: #475569;">
+                            <b>${log.old_stock ?? '-'}</b> → <b>${log.new_stock ?? '-'}</b>
+                        </td>
+                        <td style="padding: 12px 16px; color: #64748B; font-size: 12px;">
+                            ${log.note || '-'}
+                        </td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = html;
+        }
+
+        function exportLogsToCSV() {
+            if (!allStockLogs || allStockLogs.length === 0) {
+                return Swal.fire('Thông báo', 'Không có dữ liệu lịch sử để xuất file!', 'info');
+            }
+
+            let csvContent = "\uFEFF"; // UTF-8 BOM
+            csvContent += "ID,Thời Gian,Tên Mẫu Sản Phẩm,Phân Loại Tủ,Mã Barcode,Loại Thao Tác,Biến Động,Tồn Trước,Tồn Sau,Ghi Chú\n";
+
+            allStockLogs.forEach(log => {
+                let row = [
+                    log.id || '',
+                    `"${formatLogTime(log.created_at)}"`,
+                    `"${(log.ten_mau || '').replace(/"/g, '""')}"`,
+                    `"${(log.loai_tu || '').replace(/"/g, '""')}"`,
+                    `"${(log.barcode || '').replace(/"/g, '""')}"`,
+                    `"${(log.action_type || '').replace(/"/g, '""')}"`,
+                    log.change_qty ?? 0,
+                    log.old_stock ?? '',
+                    log.new_stock ?? '',
+                    `"${(log.note || '').replace(/"/g, '""')}"`
+                ];
+                csvContent += row.join(",") + "\n";
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", `LichSuKho_${new Date().toISOString().slice(0, 10)}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            Swal.fire({
+                title: 'Xuất file thành công!',
+                text: 'Đã tải xuống nhật ký lịch sử kho dạng CSV.',
+                icon: 'success',
+                timer: 1600,
+                showConfirmButton: false
+            });
+        }
+
+        // Hỗ trợ cuộn ngang bằng con lăn chuột (wheel) cho thanh bộ lọc và nút thao tác
+        document.addEventListener('wheel', (e) => {
+            const scrollable = e.target.closest('.log-filter-pills, .filter-pills, .main-action-buttons');
+            if (scrollable && e.deltaY !== 0 && scrollable.scrollWidth > scrollable.clientWidth) {
+                e.preventDefault();
+                scrollable.scrollLeft += e.deltaY;
+            }
+        }, { passive: false });
     </script>
 </body>
 </html>
