@@ -275,14 +275,30 @@
         .toolbar-bottom-row {
             display: flex; justify-content: space-between; align-items: center;
             gap: 12px; flex-wrap: wrap;
+            width: 100%; max-width: 100%; min-width: 0;
         }
-        .filter-pills { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .filter-pills { 
+            display: flex; 
+            gap: 8px; 
+            align-items: center; 
+            flex-wrap: nowrap; 
+            overflow-x: auto;
+            max-width: 100%;
+            min-width: 0;
+            padding-bottom: 4px;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        .filter-pills::-webkit-scrollbar {
+            display: none;
+        }
         .filter-pill {
             background: #F8FAFC; border: 1px solid var(--border);
             color: #475569; padding: 7px 16px; border-radius: 20px;
             font-size: 13px; font-weight: 600; cursor: pointer;
             transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px;
-            white-space: nowrap; flex-shrink: 0; user-select: none;
+            white-space: nowrap !important; flex-shrink: 0 !important; user-select: none;
         }
         .filter-pill:hover { border-color: var(--primary); color: var(--primary); background: white; }
         .filter-pill.active {
@@ -435,12 +451,136 @@
         }
 
         /* Badge loại giao dịch Log */
-        .badge-log { display: inline-flex; align-items: center; padding: 3px 8px; border-radius: 6px; font-size: 11.5px; font-weight: 700; gap: 4px; }
+        .badge-log { 
+            display: inline-flex; 
+            align-items: center; 
+            padding: 4px 9px; 
+            border-radius: 6px; 
+            font-size: 12px; 
+            font-weight: 700; 
+            gap: 5px; 
+            white-space: nowrap; 
+            flex-shrink: 0; 
+        }
         .badge-xuat { background: #FEE2E2; color: #DC2626; border: 1px solid #FECACA; }
         .badge-nhap { background: #DCFCE7; color: #16A34A; border: 1px solid #BBF7D0; }
         .badge-edit { background: #FEF3C7; color: #D97706; border: 1px solid #FDE68A; }
         .badge-add  { background: #EEF2FF; color: #4F46E5; border: 1px solid #C7D2FE; }
         .badge-del  { background: #F1F5F9; color: #64748B; border: 1px solid #E2E8F0; }
+
+        /* Giao diện Lịch sử kho Responsive */
+        .logs-desktop-view { display: block; }
+        .logs-mobile-view { display: none; }
+
+        .log-mobile-card {
+            background: #FFFFFF;
+            border: 1px solid #E2E8F0;
+            border-radius: 14px;
+            padding: 13px 15px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.04);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            transition: all 0.15s ease;
+        }
+        .log-mobile-card:active {
+            background: #F8FAFC;
+        }
+        .lmc-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            padding-bottom: 7px;
+            border-bottom: 1px dashed #F1F5F9;
+        }
+        .lmc-badge {
+            display: flex;
+            align-items: center;
+        }
+        .lmc-time {
+            font-size: 11.5px;
+            color: #64748B;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+        .lmc-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: #0F172A;
+            line-height: 1.35;
+            word-break: break-word;
+        }
+        .lmc-meta {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 6px;
+        }
+        .lmc-category {
+            font-size: 11.5px;
+            font-weight: 600;
+            color: #4F46E5;
+            background: #EEF2FF;
+            padding: 2px 8px;
+            border-radius: 6px;
+        }
+        .lmc-barcode {
+            font-family: monospace;
+            font-size: 11.5px;
+            font-weight: 600;
+            color: #475569;
+            background: #F1F5F9;
+            padding: 2px 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            border: 1px solid #E2E8F0;
+        }
+        .lmc-barcode:active {
+            background: #E2E8F0;
+        }
+        .lmc-stats {
+            display: flex;
+            align-items: center;
+            background: #F8FAFC;
+            border: 1px solid #E2E8F0;
+            border-radius: 10px;
+            padding: 8px 12px;
+            margin-top: 2px;
+        }
+        .lmc-stat-box {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .lmc-stat-divider {
+            width: 1px;
+            height: 28px;
+            background: #CBD5E1;
+            margin: 0 12px;
+        }
+        .lmc-stat-label {
+            font-size: 11px;
+            color: #64748B;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        .lmc-stat-val {
+            font-size: 13.5px;
+            font-weight: 700;
+        }
+        .lmc-note {
+            font-size: 12px;
+            color: #64748B;
+            background: #F8FAFC;
+            padding: 6px 10px;
+            border-radius: 6px;
+            border-left: 3px solid #CBD5E1;
+            line-height: 1.4;
+            word-break: break-word;
+        }
 
         .mobile-only { display: none; }
 
@@ -559,24 +699,37 @@
             .select-wrapper { flex: 1; min-width: 0; max-width: 125px; }
             .custom-select { padding: 10px 10px; font-size: 12px; border-radius: 50px; text-overflow: ellipsis; white-space: nowrap; }
             
-            .toolbar-bottom-row { flex-direction: column; align-items: stretch; gap: 10px; }
+            .toolbar-bottom-row { 
+                flex-direction: column; 
+                align-items: stretch; 
+                gap: 10px; 
+                width: 100%; 
+                max-width: 100%; 
+                min-width: 0; 
+            }
             .filter-pills { 
-                flex-wrap: nowrap; 
-                overflow-x: auto; 
+                display: flex;
+                flex-wrap: nowrap !important; 
+                overflow-x: auto !important; 
+                width: 100%;
+                max-width: 100%;
+                min-width: 0;
                 padding-bottom: 4px; 
                 -webkit-overflow-scrolling: touch; 
                 scrollbar-width: none; 
                 -ms-overflow-style: none; 
             }
             .filter-pills::-webkit-scrollbar { display: none; }
-            .filter-pill { flex-shrink: 0; }
+            .filter-pill { flex-shrink: 0 !important; white-space: nowrap !important; }
             .main-action-buttons { 
                 display: flex; 
                 flex-direction: row; 
                 width: 100%; 
+                max-width: 100%;
+                min-width: 0;
                 gap: 8px; 
-                overflow-x: auto; 
-                flex-wrap: nowrap; 
+                overflow-x: auto !important; 
+                flex-wrap: nowrap !important; 
                 padding-bottom: 4px; 
                 -webkit-overflow-scrolling: touch; 
                 scrollbar-width: none; 
@@ -584,18 +737,31 @@
             }
             .main-action-buttons::-webkit-scrollbar { display: none; }
             .main-action-buttons .btn { 
-                flex-shrink: 0; 
+                flex-shrink: 0 !important; 
                 padding: 10px 14px; 
                 font-size: 13px; 
-                white-space: nowrap; 
+                white-space: nowrap !important; 
             }
 
-            table, thead, tbody, th, td, tr { display: block; }
-            thead { display: none; }
-            .pc-only-cell { display: none; }
+            .inventory-table-card table, 
+            .inventory-table-card thead, 
+            .inventory-table-card tbody, 
+            .inventory-table-card th, 
+            .inventory-table-card td, 
+            .inventory-table-card tr { display: block; }
+            
+            .inventory-table-card thead { display: none !important; }
+            .pc-only-cell,
+            .inventory-table-card .pc-only-cell,
+            .inventory-table-card td.pc-only-cell,
+            .inventory-table-card th.pc-only-cell,
+            td.pc-only-cell,
+            th.pc-only-cell { 
+                display: none !important; 
+            }
             .mobile-only { display: block; }
 
-            tbody tr {
+            .inventory-table-card tbody tr {
                 display: flex; gap: 12px; background: white; 
                 padding: 14px; border-radius: var(--radius);
                 box-shadow: var(--shadow-sm); margin-bottom: 12px; 
@@ -603,11 +769,11 @@
                 align-items: flex-start;
             }
 
-            tbody td { padding: 0; border: none; }
-            tbody td:nth-child(1) { flex-shrink: 0; }
+            .inventory-table-card tbody td { padding: 0; border: none; }
+            .inventory-table-card tbody td:nth-child(1) { flex-shrink: 0; }
             .thumb-admin { width: 84px; height: 84px; border-radius: 10px; object-fit: cover; }
 
-            tbody td:nth-child(3) { 
+            .inventory-table-card tbody td:nth-child(3) { 
                 flex: 1; min-width: 0; display: flex; 
                 flex-direction: column; gap: 4px; padding-bottom: 2px;
             }
@@ -622,11 +788,53 @@
                 padding: 2px 6px; border-radius: 4px; font-weight: 600;
             }
 
-            tbody td:nth-child(5) { 
+            .inventory-table-card tbody td:nth-child(5) { 
                 position: absolute; bottom: 12px; right: 12px; 
                 display: flex; gap: 6px; 
             }
             .action-btn { width: 34px; height: 34px; font-size: 14px; border-radius: 50%; }
+
+            /* Điều chỉnh Modal Lịch Sử Kho trên Mobile */
+            #stockLogsModal .modal-content {
+                width: 96% !important;
+                max-height: 92vh !important;
+                border-radius: 18px !important;
+            }
+            #stockLogsModal .modal-header {
+                padding: 14px 16px !important;
+                padding-right: 48px !important;
+            }
+            #stockLogsModal .modal-header h3 {
+                font-size: 16px !important;
+            }
+            #stockLogsModal .stock-logs-subtitle {
+                display: none;
+            }
+            #stockLogsModal .stock-logs-header-actions {
+                width: 100%;
+                display: flex;
+                gap: 8px;
+                margin-top: 4px;
+            }
+            #stockLogsModal .stock-logs-header-actions .btn {
+                flex: 1;
+                justify-content: center;
+                padding: 8px 10px !important;
+                font-size: 12px !important;
+            }
+            #stockLogsModal .modal-body {
+                max-height: calc(92vh - 220px) !important;
+            }
+            .logs-desktop-view {
+                display: none !important;
+            }
+            .logs-mobile-view {
+                display: flex !important;
+                flex-direction: column;
+                gap: 10px;
+                padding: 12px 14px;
+                background: #F8FAFC;
+            }
         }
     </style>
 </head>
@@ -985,10 +1193,10 @@
                     <div style="font-size: 24px;">📜</div>
                     <div>
                         <h3 style="margin: 0; font-size: 18px; font-weight: 800; color: #0F172A;">Lịch Sử Xuất - Nhập Kho</h3>
-                        <div style="font-size: 12px; color: #64748B; margin-top: 2px;">Theo dõi biến động và nhật ký giao dịch kho hàng</div>
+                        <div class="stock-logs-subtitle" style="font-size: 12px; color: #64748B; margin-top: 2px;">Theo dõi biến động và nhật ký giao dịch kho hàng</div>
                     </div>
                 </div>
-                <div style="display: flex; gap: 8px; align-items: center;">
+                <div class="stock-logs-header-actions" style="display: flex; gap: 8px; align-items: center;">
                     <button class="btn btn-outline" style="padding: 7px 12px; font-size: 12px;" onclick="loadStockLogs()" title="Tải lại nhật ký">
                         🔄 Làm Mới
                     </button>
@@ -1017,9 +1225,10 @@
                 </div>
             </div>
 
-            <!-- NỘI DUNG BẢNG LỊCH SỬ -->
+            <!-- NỘI DUNG LỊCH SỬ -->
             <div class="modal-body" style="padding: 0; overflow-y: auto; max-height: 52vh;">
-                <div class="table-responsive">
+                <!-- 1. BẢN DESKTOP (BẢNG ĐẦY ĐỦ 7 CỘT) -->
+                <div class="logs-desktop-view table-responsive">
                     <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
                         <thead style="position: sticky; top: 0; background: #F8FAFC; z-index: 2; border-bottom: 1px solid var(--border);">
                             <tr>
@@ -1040,6 +1249,13 @@
                             </tr>
                         </tbody>
                     </table>
+                </div>
+
+                <!-- 2. BẢN MOBILE (DANH SÁCH THẺ GIAO DỊCH CARD CHUYÊN BIỆT) -->
+                <div id="logs-mobile-cards" class="logs-mobile-view">
+                    <div style="text-align: center; padding: 40px; color: #64748B;">
+                        ⏳ Đang tải dữ liệu lịch sử...
+                    </div>
                 </div>
             </div>
 
@@ -2324,8 +2540,18 @@
 
         async function loadStockLogs() {
             const tbody = document.getElementById('logs-table-body');
+            const mobileCards = document.getElementById('logs-mobile-cards');
+            
             if (tbody) {
                 tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 40px; color: #64748B;">⏳ Đang tải dữ liệu lịch sử...</td></tr>`;
+            }
+            if (mobileCards) {
+                mobileCards.innerHTML = `
+                    <div style="text-align: center; padding: 36px 16px; color: #64748B;">
+                        <span class="btn-spinner" style="border-color: #64748B; border-top-color: transparent; width: 22px; height: 22px; margin: 0 auto 8px auto; display: block;"></span>
+                        <div style="font-size: 13px;">⏳ Đang tải dữ liệu lịch sử...</div>
+                    </div>
+                `;
             }
 
             try {
@@ -2337,14 +2563,15 @@
 
                 if (error) {
                     if (error.code === '42P01' || error.message.includes('does not exist')) {
-                        tbody.innerHTML = `
-                            <tr>
-                                <td colspan="7" style="text-align: center; padding: 30px; color: #DC2626;">
-                                    <b>⚠️ Bảng "stock_logs" chưa được khởi tạo trên Supabase!</b><br>
-                                    <span style="font-size: 12px; color: #64748B;">Vui lòng mở Supabase SQL Editor và chạy câu lệnh tạo bảng để kích hoạt tính năng này.</span>
-                                </td>
-                            </tr>
+                        const errorMsg = `
+                            <div style="padding: 24px; text-align: center; color: #B45309; background: #FEF3C7; border-radius: 14px; margin: 12px; font-size: 13px; line-height: 1.6;">
+                                <div style="font-size: 28px; margin-bottom: 6px;">⚠️</div>
+                                <b>Bảng "stock_logs" chưa được khởi tạo trên Supabase!</b><br>
+                                <span style="font-size: 12px; color: #78350F;">Vui lòng mở Supabase SQL Editor và chạy câu lệnh tạo bảng để kích hoạt tính năng này.</span>
+                            </div>
                         `;
+                        if (tbody) tbody.innerHTML = `<tr><td colspan="7">${errorMsg}</td></tr>`;
+                        if (mobileCards) mobileCards.innerHTML = errorMsg;
                         return;
                     }
                     throw error;
@@ -2353,9 +2580,9 @@
                 allStockLogs = data || [];
                 filterStockLogs();
             } catch (err) {
-                if (tbody) {
-                    tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 30px; color: #DC2626;">❌ Lỗi tải lịch sử: ${err.message}</td></tr>`;
-                }
+                const errHtml = `<div style="text-align: center; padding: 30px; color: #DC2626; font-size: 13px;">❌ Lỗi tải lịch sử: ${err.message}</div>`;
+                if (tbody) tbody.innerHTML = `<tr><td colspan="7">${errHtml}</td></tr>`;
+                if (mobileCards) mobileCards.innerHTML = errHtml;
             }
         }
 
@@ -2411,37 +2638,54 @@
 
         function renderStockLogsTable(logs) {
             const tbody = document.getElementById('logs-table-body');
+            const mobileCards = document.getElementById('logs-mobile-cards');
             const counter = document.getElementById('logs-counter-info');
             if (counter) counter.innerText = `Hiển thị ${logs.length} / ${allStockLogs.length} giao dịch`;
 
-            if (!tbody) return;
             if (logs.length === 0) {
-                tbody.innerHTML = `
+                const emptyTableHtml = `
                     <tr>
                         <td colspan="7" style="text-align: center; padding: 40px; color: #64748B;">
-                            📦 Không tìm thấy bản ghi lịch sử nào phù hợp
+                            <div style="font-size: 28px; margin-bottom: 6px;">📦</div>
+                            <div style="font-weight: 700; color: #0F172A;">Không tìm thấy bản ghi lịch sử nào phù hợp</div>
                         </td>
                     </tr>
                 `;
+                const emptyCardsHtml = `
+                    <div style="text-align: center; padding: 40px 16px; color: #64748B;">
+                        <div style="font-size: 32px; margin-bottom: 8px;">📦</div>
+                        <div style="font-weight: 700; color: #0F172A; font-size: 14px;">Không tìm thấy bản ghi nào phù hợp</div>
+                        <div style="font-size: 12px; color: #94A3B8; margin-top: 4px;">Thử chọn bộ lọc khác hoặc từ khóa tìm kiếm</div>
+                    </div>
+                `;
+                if (tbody) tbody.innerHTML = emptyTableHtml;
+                if (mobileCards) mobileCards.innerHTML = emptyCardsHtml;
                 return;
             }
 
-            let html = '';
+            let tableHtml = '';
+            let cardsHtml = '';
+
             logs.forEach(log => {
                 const diff = parseInt(log.change_qty || 0);
                 const diffColor = diff > 0 ? '#16A34A' : (diff < 0 ? '#DC2626' : '#64748B');
                 const diffSign = diff > 0 ? `+${diff}` : `${diff}`;
                 const timeFormatted = formatLogTime(log.created_at);
                 const actionBadge = getActionBadge(log.action_type);
+                const barcodeSafe = (log.barcode || '').replace(/'/g, "\\'");
+                const tenMau = log.ten_mau || 'Chưa đặt tên';
+                const loaiTu = log.loai_tu || 'Khác';
+                const hasNote = log.note && log.note !== '-' && log.note.trim() !== '';
 
-                html += `
+                // 1. Dòng bảng Desktop
+                tableHtml += `
                     <tr style="border-bottom: 1px solid #F1F5F9;">
                         <td style="padding: 12px 16px; color: #64748B; font-size: 12px; white-space: nowrap;">
                             ${timeFormatted}
                         </td>
                         <td style="padding: 12px 16px;">
-                            <div style="font-weight: 700; color: #0F172A;">${log.ten_mau || 'Chưa đặt tên'}</div>
-                            <div style="font-size: 11.5px; color: #64748B; margin-top: 2px;">🗄️ ${log.loai_tu || 'Khác'}</div>
+                            <div style="font-weight: 700; color: #0F172A;">${tenMau}</div>
+                            <div style="font-size: 11.5px; color: #64748B; margin-top: 2px;">🗄️ ${loaiTu}</div>
                         </td>
                         <td style="padding: 12px 16px; font-family: monospace; font-weight: 600; color: #334155;">
                             ${log.barcode || '-'}
@@ -2460,8 +2704,43 @@
                         </td>
                     </tr>
                 `;
+
+                // 2. Thẻ Card Mobile
+                cardsHtml += `
+                    <div class="log-mobile-card">
+                        <div class="lmc-header">
+                            <div class="lmc-badge">${actionBadge}</div>
+                            <div class="lmc-time">⏰ ${timeFormatted}</div>
+                        </div>
+                        <div class="lmc-title">${tenMau}</div>
+                        <div class="lmc-meta">
+                            <span class="lmc-category">🗄️ ${loaiTu}</span>
+                            ${log.barcode ? `<span class="lmc-barcode" onclick="copyBarcode('${barcodeSafe}', event)" title="Bấm để sao chép mã">🔖 ${log.barcode}</span>` : ''}
+                        </div>
+                        <div class="lmc-stats">
+                            <div class="lmc-stat-box">
+                                <span class="lmc-stat-label">Biến động</span>
+                                <span class="lmc-stat-val" style="color: ${diffColor};">${diffSign} cái</span>
+                            </div>
+                            <div class="lmc-stat-divider"></div>
+                            <div class="lmc-stat-box">
+                                <span class="lmc-stat-label">Tồn kho</span>
+                                <span class="lmc-stat-val" style="color: #334155;">
+                                    <b>${log.old_stock ?? '-'}</b> → <b>${log.new_stock ?? '-'}</b> cái
+                                </span>
+                            </div>
+                        </div>
+                        ${hasNote ? `
+                            <div class="lmc-note">
+                                <span style="color: #94A3B8;">📝</span> ${log.note}
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
             });
-            tbody.innerHTML = html;
+
+            if (tbody) tbody.innerHTML = tableHtml;
+            if (mobileCards) mobileCards.innerHTML = cardsHtml;
         }
 
         function exportLogsToCSV() {
@@ -2506,7 +2785,7 @@
             });
         }
 
-        // Hỗ trợ cuộn ngang bằng con lăn chuột (wheel) cho thanh bộ lọc và nút thao tác
+        // Hỗ trợ cuộn ngang bằng con lăn chuột (wheel) và kéo chuột (drag) cho thanh bộ lọc và nút thao tác
         document.addEventListener('wheel', (e) => {
             const scrollable = e.target.closest('.log-filter-pills, .filter-pills, .main-action-buttons');
             if (scrollable && e.deltaY !== 0 && scrollable.scrollWidth > scrollable.clientWidth) {
@@ -2514,6 +2793,41 @@
                 scrollable.scrollLeft += e.deltaY;
             }
         }, { passive: false });
+
+        // Kéo chuột để cuộn ngang trên PC
+        (function initDragScroll() {
+            const bindDrag = () => {
+                const scrollContainers = document.querySelectorAll('.filter-pills, .log-filter-pills, .main-action-buttons');
+                scrollContainers.forEach(container => {
+                    if (container._dragInit) return;
+                    container._dragInit = true;
+                    let isDown = false;
+                    let startX = 0;
+                    let scrollLeft = 0;
+
+                    container.addEventListener('mousedown', (e) => {
+                        isDown = true;
+                        startX = e.pageX - container.offsetLeft;
+                        scrollLeft = container.scrollLeft;
+                    });
+                    container.addEventListener('mouseleave', () => { isDown = false; });
+                    container.addEventListener('mouseup', () => { isDown = false; });
+                    container.addEventListener('mousemove', (e) => {
+                        if (!isDown) return;
+                        const x = e.pageX - container.offsetLeft;
+                        const walk = (x - startX);
+                        if (Math.abs(walk) > 3) {
+                            container.scrollLeft = scrollLeft - walk;
+                        }
+                    });
+                });
+            };
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', bindDrag);
+            } else {
+                bindDrag();
+            }
+        })();
     </script>
 </body>
 </html>
